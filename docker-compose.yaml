@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    container_name: logify_backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      MYSQL_HOST: db
+      MYSQL_USER: logify
+      MYSQL_PASSWORD: logify
+      MYSQL_DATABASE: logify
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  db:
+    image: mysql
+    restart: always
+    container_name: logify_db
+    environment:
+      MYSQL_DATABASE: logify
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/database.sql
+
+volumes:
+  db_data:

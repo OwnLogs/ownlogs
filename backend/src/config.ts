@@ -11,14 +11,11 @@ export interface dbConfig {
   multipleStatements: boolean;
 }
 
-console.log(process.env.DB_PASSWORD);
-
-
 export const dbConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
   connectionLimit: 100,
   waitForConnections: true,
   debug: false,

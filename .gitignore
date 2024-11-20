@@ -1,9 +1,9 @@
 node_modules
 
 # Output
-.output
-.vercel
-/.svelte-kit
+.output/
+.vercel/
+.svelte-kit/
 build/
 dist/
 
@@ -22,3 +22,4 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 pnpm-lock.yaml
+db_data/

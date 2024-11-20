@@ -1,9 +1,11 @@
 import DB from '.';
 import { format } from 'date-fns';
 
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+
 class Log {
   id?: number;
-  level: string;
+  level: LogLevel;
   message: string;
   timestamp: Date;
 
@@ -32,7 +34,7 @@ class LogDAO {
       id: row.id,
       level: row.level,
       message: row.message,
-      timestamp: row.timestamp,
+      timestamp: row.timestamp
     });
   }
 
@@ -48,15 +50,51 @@ class LogDAO {
     return log;
   }
 
-  async getLogs(limit: number = 100): Promise<Log[]> {
-    const sql = `
-      SELECT id, level, message, timestamp
-      FROM logs
-      ORDER BY timestamp ASC
-      LIMIT ?
-    `;
-    const rows = await this.#db.query<any[]>(sql, [limit]);
-    return rows.map(this.#convertToLog);
+  async getLogs(
+    limit: number = 100,
+    offset: number = 0,
+    level: LogLevel | 'all'
+  ): Promise<{
+    logs: Log[];
+    total: number;
+    hasMore: boolean;
+    success: boolean;
+    error?: unknown;
+  }> {
+    try {
+      const getLogsSQL = `
+        SELECT *
+        FROM logs
+        ${level !== 'all' ? 'WHERE level = "' + level + '"' : ''}
+        ORDER BY timestamp DESC, id DESC
+        LIMIT ?
+        OFFSET ?
+      `;
+      const logsRows = await this.#db.query<any[]>(getLogsSQL, [limit, offset]);
+      const logs = logsRows.map(this.#convertToLog);
+      const totalNumberOfLogsSQL = `
+        SELECT COUNT(*) as total
+        FROM logs
+        ${level !== 'all' ? 'WHERE level = "' + level + '"' : ''}
+      `;
+      const totalNumberOfLogs = await this.#db.query<any[]>(totalNumberOfLogsSQL);
+
+      return {
+        logs,
+        total: totalNumberOfLogs[0].total,
+        hasMore: totalNumberOfLogs[0].total > offset + limit,
+        success: true
+      };
+    } catch (error) {
+      console.error('Error getting logs:', error);
+      return {
+        logs: [],
+        total: 0,
+        hasMore: false,
+        error: error,
+        success: false
+      };
+    }
   }
 
   async deleteLog(id: number): Promise<void> {

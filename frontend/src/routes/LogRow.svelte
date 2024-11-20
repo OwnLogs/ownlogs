@@ -6,9 +6,10 @@
 	interface Props {
     log: Log;
     class?: string;
+    tableColumnWidths: [string, string];
 	}
 
-	const { log, class: className }: Props = $props();
+	const { log, class: className, tableColumnWidths }: Props = $props();
 
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();
@@ -23,7 +24,7 @@
 </script>
 
 <div class={cn("rounded-lg flex items-center flex-row px-2 py-1 text-neutral-400", className, rowClasses.get(log.level))}>
-  <div class="flex items-center flex-row gap-2 w-[200px]">
+  <div class="flex items-center flex-row gap-2" style="width: {tableColumnWidths[0]};">
     <!-- Icon -->
     {#if log.level === 'info'}
       <Info class="size-5 inline-block" />
@@ -38,7 +39,7 @@
     {/if}
     {formatTimestamp(log.timestamp)}
   </div>
-  <div>
+  <div style="width: {tableColumnWidths[1]};">
     {log.message}
   </div>
 </div>
