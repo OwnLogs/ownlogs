@@ -5,13 +5,15 @@ export function runLoggerTest() {
     backendUrl: 'http://localhost:3000',
     bufferSize: 1
   });
-  const messages = ['Test message 1', 'Test message 2', 'Test message 3'];
-  const message = messages[Math.floor(Math.random() * messages.length)];
+
+  const message = 'Test message';
   const actions = [
-    () => logger.debug(message),
-    () => logger.info(message),
-    () => logger.warn(message),
-    () => logger.error(message)
+    (i: number) => logger.debug(message + ' ' + i),
+    (i: number) => logger.info(message + ' ' + i),
+    (i: number) => logger.warn(message + ' ' + i),
+    (i: number) => logger.error(message + ' ' + i),
+    (i: number) => logger.fatal(message + ' ' + i)
   ];
-  actions[Math.floor(Math.random() * actions.length)]();
+
+  for (let i = 0; i < 10; i++) actions[Math.floor(Math.random() * actions.length)](i);
 }

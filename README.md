@@ -1,14 +1,16 @@
 # Logify
 
+To run the project, just run `./run.sh`.
 
 # TODO
  - [x] Implement log pagination
- - [ ] Make the UI more pleasant
+ - [x] Make the UI more pleasant (always WIP)
  - [x] Add log filters
  - [ ] Add log sorting
- - [ ] Add log clearing
- - [ ] Add log rotation (find a way to create the event from the server because it is unsupported for now)
- - [ ] Add log
+ - [x] Add log deleting
+ - [x] Add log rotation
+ - [x] Add log deletion
  - [x] Containerize the backend
  - [x] Containerize the database
- - [ ] Containerize the frontend
+ - [x] Containerize the frontend
+ - [x] Add authentication
