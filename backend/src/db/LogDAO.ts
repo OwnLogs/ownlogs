@@ -51,7 +51,7 @@ class LogDAO {
   }
 
   async getLogs(
-    limit: number = 100,
+    limit: number = 50,
     offset: number = 0,
     level: LogLevel | 'all'
   ): Promise<{
@@ -97,12 +97,43 @@ class LogDAO {
     }
   }
 
-  async deleteLog(id: number): Promise<void> {
-    const sql = `
-      DELETE FROM logs
-      WHERE id = ?
+  async deleteLog(id: number): Promise<boolean> {
+    try {
+      const sql = `
+        DELETE FROM logs
+        WHERE id = ?
+      `;
+      await this.#db.query(sql, [id]);
+      return true;
+    } catch (error) {
+      console.error('Error deleting log:', error);
+      return false;
+    }
+  }
+
+  async getLogsOverviewStatistics(): Promise<
+    { [key in LogLevel]: number } & { recentLogs: Log[] }
+  > {
+    const statisticsSQL = `
+      SELECT level, COUNT(*) as count
+      FROM logs
+      GROUP BY level;
     `;
-    await this.#db.query(sql, [id]);
+    const statisticsRows: { level: LogLevel; count: number }[] =
+      await this.#db.query<[]>(statisticsSQL);
+    const statistics: { [key in LogLevel]: number } = {
+      debug: 0,
+      info: 0,
+      warn: 0,
+      error: 0,
+      fatal: 0
+    };
+    for (const row of statisticsRows) {
+      statistics[row.level] = row.count;
+    }
+
+    const recentLogs = await this.getLogs(10, 0, 'all');
+    return { ...statistics, recentLogs: recentLogs.logs };
   }
 }
 
