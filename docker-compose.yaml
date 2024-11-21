@@ -4,8 +4,8 @@ services:
   backend:
     container_name: logify_backend
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./backend/Dockerfile
     environment:
       NODE_ENV: production
       MYSQL_HOST: ${MYSQL_HOST}
@@ -13,11 +13,8 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       JWT_SECRET: ${JWT_SECRET}
-      PORT: 3000 # Do not change this port, this is the internal port of the backend
+      PORT: 3000
     ports:
-      # You can change the exposed port of the backend but you HAVE to change the
-      # BACKEND_PORT environment variable in the frontend service AND the port in the
-      # backend service
       - "3000:3000"
     depends_on:
       - db
@@ -25,21 +22,21 @@ services:
   frontend:
     container_name: logify_frontend
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./frontend/Dockerfile
     environment:
       PORT: 4173
-      PUBLIC_BACKEND_PORT: 3000
+      ORIGIN: http://localhost:4173
+      HOST: 0.0.0.0
       PUBLIC_BACKEND_HOST: localhost
-      MYSQL_HOST: db
+      PUBLIC_BACKEND_PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      MYSQL_HOST: ${MYSQL_HOST}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: production
     ports:
-      # Change the first port to the port you want to use for your frontend
-      # Do not change the second port unless you change the port in the environment
-      # but it's should't be necessary because it's exposed as an internal port
       - "4173:4173"
     depends_on:
       - backend
@@ -50,9 +47,12 @@ services:
     restart: always
     container_name: logify_db
     environment:
-      MYSQL_DATABASE: logify
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
     volumes:
-      - db_data:/var/lib/mysql
+      - ./db_data:/var/lib/mysql
       - ./backend/database.sql:/docker-entrypoint-initdb.d/database.sql
 
 volumes:

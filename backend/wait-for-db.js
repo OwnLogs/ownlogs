@@ -1,5 +1,5 @@
 const waitPort = require('wait-port');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -14,13 +14,16 @@ waitPort(opts)
   .then((open) => {
     if (open) {
       console.log('MySQL is up - starting server');
-      exec('node dist/index.js', (err, stdout, stderr) => {
-        if (err) {
-          console.error(`Error starting server: ${err}`);
-          return;
+      const child = spawn('npm', ['run', 'start'], { stdio: 'inherit' });
+
+      child.on('error', (err) => {
+        console.error(`Error starting server: ${err}`);
+      });
+
+      child.on('close', (code) => {
+        if (code !== 0) {
+          console.error(`Server process exited with code ${code}`);
         }
-        console.log(stdout);
-        console.error(stderr);
       });
     } else {
       console.error('MySQL is not available');

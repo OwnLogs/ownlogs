@@ -4,9 +4,12 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "npx tsc",
-    "start": "NODE_ENV=development node dist/index.js",
-    "dev": "NODE_ENV=development nodemon",
+    "start": "node dist/backend/src/index.js",
+    "dev": "nodemon",
     "format": "prettier --write ."
+  },
+  "imports": {
+    "@shared/configs": "../shared/configs.ts"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +20,8 @@
     "@types/cookie-parser": "^1.4.7",
     "@types/express-ws": "^3.0.5",
     "@types/jsonwebtoken": "^9.0.7",
+    "@types/node-os-utils": "^1.3.4",
+    "@types/ws": "^8.5.13",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.7",
@@ -26,8 +31,10 @@
     "express-ws": "^5.0.2",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.4",
+    "node-os-utils": "^1.3.7",
     "prettier": "^3.3.3",
-    "wait-port": "^1.1.0"
+    "wait-port": "^1.1.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

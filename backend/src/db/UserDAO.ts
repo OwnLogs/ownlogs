@@ -7,16 +7,17 @@ export interface User {
 }
 
 class UserDAO {
-  #db = DB.getInstance();
-
   async findUserByUsername(username: string): Promise<User | null> {
+    if (!username) {
+      return null;
+    }
     try {
       const sql = `
         SELECT *
         FROM user
         WHERE username = ?
       `;
-      const rows = await this.#db.query(sql, [username]);
+      const rows = await DB.query(sql, [username]);
       if (rows.length === 0) {
         return null;
       }
@@ -33,7 +34,7 @@ class UserDAO {
       VALUES (?, ?)
     `;
     const params = [username, passwordHash];
-    const insertId = await this.#db.execute(sql, params);
+    const insertId = await DB.execute(sql, params);
     const user: User = { username, passwordHash, id: insertId };
     return user;
   }
@@ -45,7 +46,7 @@ class UserDAO {
       WHERE id = ?
     `;
     const params = [user.username, user.passwordHash, user.id];
-    await this.#db.execute(sql, params);
+    await DB.execute(sql, params);
     return user;
   }
 }

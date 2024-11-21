@@ -1,26 +1,31 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
+
+-- Database creation
 CREATE DATABASE IF NOT EXISTS `logify` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE `logify`;
 
-DELIMITER $$
-DROP PROCEDURE IF EXISTS `log_rotate`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `log_rotate` ()   BEGIN
-    DELETE FROM logs WHERE level = 'debug' AND timestamp < NOW() - INTERVAL 2 DAY$$
 
-DELIMITER ;
+-- User
+DROP USER IF EXISTS 'logify'@'%';
+CREATE USER 'logify'@'%' IDENTIFIED BY 'logify';
+GRANT ALL PRIVILEGES ON logify.* TO 'logify'@'%';
+FLUSH PRIVILEGES;
 
-DROP TABLE IF EXISTS `logs`;
+
+-- TABLES
+-- Logs table
 CREATE TABLE IF NOT EXISTS `logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `level` enum('debug','info','warn','error','fatal') DEFAULT NULL,
   `message` text NOT NULL,
   `timestamp` datetime DEFAULT CURRENT_TIMESTAMP,
+  `source` varchar(255) NOT NULL DEFAULT 'unknown',
+  `serverName` varchar(255),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `user`;
+-- Users table
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -28,13 +33,24 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+
+-- PROCEDURES
+-- Procedure to delete old logs
 DELIMITER $$
-DROP EVENT IF EXISTS `rotate_logs_event`$$
-CREATE DEFINER=`root`@`localhost` EVENT `rotate_logs_event` ON SCHEDULE EVERY 1 DAY STARTS '2024-11-20 08:00:00' ON COMPLETION NOT PRESERVE ENABLE COMMENT 'Delete old logs to preserve storage' DO CALL log_rotate$$
-
+CREATE DEFINER=`logify`@`%` PROCEDURE IF NOT EXISTS `log_rotate`()
+BEGIN
+  DELETE FROM logs WHERE level = 'debug' AND timestamp < NOW() - INTERVAL 2 DAY;
+  DELETE FROM logs WHERE level = 'info' AND timestamp < NOW() - INTERVAL 7 DAY;
+  DELETE FROM logs WHERE level = 'warn' AND timestamp < NOW() - INTERVAL 30 DAY;
+  DELETE FROM logs WHERE level = 'error' AND timestamp < NOW() - INTERVAL 90 DAY;
+  DELETE FROM logs WHERE level = 'fatal' AND timestamp < NOW() - INTERVAL 365 DAY;
+END$$
 DELIMITER ;
-COMMIT;
 
-CREATE USER 'logify'@'%' IDENTIFIED BY 'logify';
-GRANT ALL PRIVILEGES ON logify.* TO 'logify'@'%';
-FLUSH PRIVILEGES;
+
+-- EVENTS
+-- Event that triggers everyday that calls the log_rotate procedure
+CREATE DEFINER=`logify`@`%` EVENT IF NOT EXISTS `rotate_logs_event` ON SCHEDULE EVERY 1 DAY STARTS '2024-11-20 08:00:00' ON COMPLETION NOT PRESERVE ENABLE COMMENT 'Delete old logs to preserve storage' DO CALL log_rotate
+
+
+COMMIT;

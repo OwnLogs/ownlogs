@@ -1,14 +1,7 @@
 import { auth } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 
-/**
- * Checks if a URL starts with a given path.
- *
- * @param {string} url - The URL to check.
- * @param {string|string[]} path - The path or an array of paths to compare with the URL.
- * @returns {boolean} Returns true if the URL starts with the path(s), otherwise returns false.
- */
-function urlStartsWith(url, path) {
+function urlStartsWith(url: string, path: string | string[]): boolean {
   if (!url || !path) return false;
   if (path instanceof Array) return path.some((p) => urlStartsWith(url, p));
   // For the `/` path

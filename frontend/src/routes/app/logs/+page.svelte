@@ -1,55 +1,51 @@
-<script lang="ts">
-  import { onMount } from 'svelte';
-  import { type Log, type LogLevel } from '../../../app.d';
-  import { WEBSOCKET_URL } from '$lib/constants';
-  import { Button } from '$lib/components/ui/button';
-  import * as Card from '$lib/components/ui/card';
-  import * as Table from '$lib/components/ui/table';
+<script lang="ts" generics="TData, TValue">
+  import { Button } from '$lib/components/ui/button/index.js';
+  import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
+  import * as Table from '$lib/components/ui/table/index.js';
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
   import * as Select from '$lib/components/ui/select/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { toast } from 'svelte-sonner';
-  import { Trash2 } from 'lucide-svelte';
   import { pageMetadata } from '$lib/stores';
-  import { formatTimestamp } from '$lib/utils';
-  import LogLevelPill from '$lib/components/LogLevel.svelte';
+  import {
+    type VisibilityState,
+    type RowSelectionState,
+    getCoreRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    getFilteredRowModel
+  } from '@tanstack/table-core';
+  import { ChevronLeft, ChevronRight, Settings2 } from 'lucide-svelte';
+
+  import { onMount } from 'svelte';
+  import { WEBSOCKET_URL } from '$lib/constants';
+  import { toast } from 'svelte-sonner';
+  import { columns, type Logs } from './columns.js';
+  import { scale } from 'svelte/transition';
+  import { backOut } from 'svelte/easing';
 
   pageMetadata.set({
-    title: 'Logs',
-    description: 'View and manage logs.',
-    breadcrumbs: [{ name: 'Logs' }, { name: 'All' }]
+    title: 'Logs overview',
+    description: 'Logs overview analytics about logs.',
+    breadcrumbs: [{ name: 'Logs' }, { name: 'Overview' }]
   });
 
-  const logLevelValues = ['all', 'debug', 'info', 'warn', 'error', 'fatal'];
-
-  let logs: Log[] = $state([]);
-  let logIds: Set<number> = $state(new Set());
-  let isLoading: boolean = $state(false);
-  let isFetchingMoreLogs: boolean = $state(false);
+  let logs: Logs = $state({
+    logs: [],
+    totalLogs: 0,
+    page: 0,
+    pageSize: 30
+  });
+  let realTime: boolean = $state(true);
   let socket: WebSocket | undefined = $state();
-  let logsOffset: number = $state(0);
-  let hasMoreLogs: boolean = $state(true);
-  let totalLogs: number = $state(0);
-  let logLevelFilterValue: LogLevel | 'all' = $state('all');
-  let contextMenu: HTMLElement | undefined = $state();
-  let selectedRows: number[] = $state([]);
+  let columnVisibility = $state<VisibilityState>({ source: false });
+  let rowSelection = $state<RowSelectionState>({});
 
   // Fetches logs based on the specified log level
-  async function fetchLogs(
-    { level }: { level?: LogLevel | 'all' } = { level: logLevelFilterValue }
-  ) {
-    if (isLoading || !hasMoreLogs || !socket) return;
+  async function fetchLogs(page: number = 0) {
+    if (!socket) return;
 
-    if (logs.length === 0) {
-      isLoading = true;
-    } else {
-      isFetchingMoreLogs = true;
-    }
-
-    socket.send(JSON.stringify({ action: 'fetchLogs', level, offset: logsOffset }));
-
-    isLoading = false;
-    isFetchingMoreLogs = false;
+    socket.send(JSON.stringify({ action: 'fetchLogs', page, pageSize: logs.pageSize }));
   }
 
   // Connect to websocket and listen for new logs
@@ -60,6 +56,7 @@
     socket.addEventListener('message', (event) => {
       const response = JSON.parse(event.data);
 
+      // Handle errors
       if (!response.success) {
         toast.error('An error occurred while fetching logs');
         console.error(response.error);
@@ -69,54 +66,29 @@
       switch (response.action) {
         // When the server is receiving new logs
         case 'newLogs': {
-          filterLogs(response.logs).forEach((log: Log) => {
-            if (logIds.has(log.id)) return;
-            logs = [log, ...logs];
-            logIds.add(log.id);
-            totalLogs++;
-          });
+          logs.logs = [...response.logs, ...(logs?.logs ?? [])].slice(0, logs.pageSize);
+          logs.totalLogs += response.logs.length;
           break;
         }
 
         // Response handling when fetching logs
         case 'fetchLogs': {
-          filterLogs(response.logs).forEach((log: Log) => {
-            if (logIds.has(log.id)) return;
-            logs.push(log);
-            logIds.add(log.id);
-          });
-          hasMoreLogs = response.hasMore;
-          logsOffset = response.offset;
-          totalLogs = response.total;
-
-          break;
-        }
-
-        // Response handling when deleting logs
-        case 'deleteLog': {
-          // If the row is selected, remove it from the selected rows
-          const associatedCheckbox = document.querySelector(
-            '.log-row-checkbox[data-value="' + response.id + '"]'
-          );
-
-          if (associatedCheckbox) {
-            const isChecked = (associatedCheckbox as HTMLInputElement).dataset.state === 'checked';
-            if (isChecked) {
-              selectedRows = selectedRows.filter((id) => id !== response.id);
-            }
-          }
-          logs = logs.filter((log) => log.id !== response.id);
-          logIds.delete(response.id);
-          totalLogs--;
+          logs = response;
+          table.setPageSize(logs.pageSize);
           break;
         }
 
         // Response handling when deleting logs
         case 'deleteLogs': {
-          logs = logs.filter((log) => !selectedRows.includes(log.id));
-          selectedRows.forEach((id: number) => logIds.delete(id));
-          totalLogs -= selectedRows.length;
-          selectedRows = [];
+          logs = {
+            ...logs,
+            ...response.logs
+          };
+
+          table.getRowModel().rows.forEach((row) => {
+            row.toggleSelected(false);
+          });
+
           break;
         }
 
@@ -124,7 +96,6 @@
           break;
         }
       }
-      isLoading = false;
     });
 
     // Fetching initial logs on connection
@@ -133,227 +104,219 @@
     });
   });
 
-  // Function to handle log level change
-  function logLevelChange() {
-    logs = [];
-    logIds = new Set();
-    logsOffset = 0;
-    hasMoreLogs = true;
-    totalLogs = 0;
-    fetchLogs({ level: logLevelFilterValue });
+  function nextPage() {
+    if (logs.page === Math.ceil(logs.totalLogs / logs.pageSize) - 1) return;
+    fetchLogs(logs.page + 1);
   }
 
-  function filterLogs(logs: Log[]): Log[] {
-    return logs.filter((log) => logLevelFilterValue === 'all' || log.level === logLevelFilterValue);
-  }
-
-  async function deleteLog(logId: number) {
-    if (!logId || !socket) return;
-
-    socket.send(JSON.stringify({ action: 'deleteLog', id: logId }));
+  function previousPage() {
+    if (logs.page === 0) return;
+    fetchLogs(logs.page - 1);
   }
 
   async function deleteLogs() {
     if (!socket) return;
 
-    socket.send(JSON.stringify({ action: 'deleteLogs', logIds: selectedRows }));
+    const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original.id);
+    socket.send(
+      JSON.stringify({
+        action: 'deleteLogs',
+        logIds: selectedRows,
+        page: logs.page,
+        pageSize: logs.pageSize
+      })
+    );
   }
 
-  function onContextMenu(e: MouseEvent) {
-    if (!e?.target || !(e.target as HTMLElement).closest('.log-row') || !contextMenu) return;
-    e.preventDefault();
-    const { clientX, clientY } = e;
-    contextMenu.style.left = `${clientX}px`;
-    contextMenu.style.top = `${clientY}px`;
-    contextMenu.style.opacity = '1';
-    const logId = (e.target as HTMLElement).closest('.log-row')?.getAttribute('data-log-id');
-
-    // Delete log
-    if (logId) {
-      contextMenu.querySelector('button#deleteLog')?.setAttribute('data-log-id', logId);
-      contextMenu.querySelector('button#deleteLog')?.addEventListener('click', (e) => {
-        const logId = (e.target as HTMLElement)
-          .closest('button#deleteLog')
-          ?.getAttribute('data-log-id');
-
-        if (logId) {
-          deleteLog(parseInt(logId));
-
-          // If the row is selected, decrement the number of selected rows
-          const row = document.querySelector(`.log-row[data-log-id='${logId}'`);
-          if (row) {
-            const isSelected = (row?.querySelector('.log-row-checkbox') as HTMLInputElement)
-              .checked;
-            if (isSelected) {
-              selectedRows = selectedRows.filter((id) => id !== parseInt(logId));
-            }
-          }
-        }
-        if (contextMenu) contextMenu.style.opacity = '0';
-      });
-    }
-  }
-  const getValue = (el: HTMLElement) => parseInt(el.dataset.value || '');
-
-  function onclick(e: MouseEvent) {
-    if (contextMenu) {
-      contextMenu.style.opacity = '0';
-    }
-
-    // Handle shift click to select multiple checkboxes
-    if (e.target && (e.target as HTMLElement).closest('.log-row-checkbox')) {
-      const target: HTMLInputElement | null = (e.target as HTMLElement).closest(
-        '.log-row-checkbox'
-      );
-      if (!target) return;
-
-      const logId = getValue(target);
-      if (e.shiftKey) {
-        const start = selectedRows.length > 0 ? selectedRows[selectedRows.length - 1] : 0;
-        const min = logs.findIndex((log) => log.id === start);
-        const max = logs.findIndex((log) => log.id === logId);
-        const [startIndex, endIndex] = [Math.min(min, max), Math.max(min, max)];
-
-        logs.forEach((log, i) => {
-          const id = log.id;
-          if (i >= startIndex && i <= endIndex) {
-            if (!selectedRows.includes(id)) {
-              selectedRows = [...selectedRows, id];
-            }
-          }
-        });
+  const table = createSvelteTable({
+    get data() {
+      return logs.logs;
+    },
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: (updater) => {
+      if (typeof updater === 'function') {
+        columnVisibility = updater(columnVisibility);
       } else {
-        if (selectedRows.includes(logId)) {
-          selectedRows = selectedRows.filter((row) => row !== logId);
-        } else {
-          selectedRows = [...selectedRows, logId];
-        }
+        columnVisibility = updater;
+      }
+    },
+    onRowSelectionChange: (updater) => {
+      if (typeof updater === 'function') {
+        rowSelection = updater(rowSelection);
+      } else {
+        rowSelection = updater;
+      }
+    },
+    state: {
+      get columnVisibility() {
+        return columnVisibility;
+      },
+      get rowSelection() {
+        return rowSelection;
       }
     }
-  }
+  });
+
+  const realTimeChange = (e: boolean) => {
+    realTime = e;
+
+    if (!socket) return;
+
+    socket.send(JSON.stringify({ action: 'changeRealTime', realTime }));
+
+    if (realTime) {
+      fetchLogs();
+    }
+  };
 </script>
 
-<svelte:window oncontextmenu={onContextMenu} {onclick} />
-
-<!-- Context menu -->
-<div
-  class="absolute z-20 flex w-[200px] flex-col overflow-hidden rounded border bg-background transition-opacity"
-  bind:this={contextMenu}
-  style="opacity: 0;"
->
-  <button
-    id="deleteLog"
-    class="flex w-full flex-row items-center gap-2 px-4 py-2 text-base transition-colors hover:bg-muted/50"
-  >
-    <Trash2 class="size-4 text-red-600" />
-    Delete
-  </button>
-</div>
-
-<!-- Main content -->
 <div class="flex w-full flex-col">
-  <div class="flex flex-col sm:gap-4 sm:py-4">
-    <main class="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>Logs</Card.Title>
-        </Card.Header>
-        <Card.Content>
-          <div class="mb-4 flex flex-row items-center justify-between gap-4">
-            <div class="flex flex-row items-center gap-1">
-              <Label for="logLevelFilter">Log level :</Label>
-              <Select.Root
-                type="single"
-                name="logLevelFilter"
-                bind:value={logLevelFilterValue}
-                onValueChange={logLevelChange}
+  <div class="gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+    <!-- Table heading -->
+    <div class="flex items-center gap-6 py-4">
+      <div class="flex items-center space-x-2">
+        <Checkbox id="realTimeLogs" checked={realTime} onCheckedChange={realTimeChange} />
+        <Label
+          for="realTimeLogs"
+          class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Real-time
+        </Label>
+      </div>
+      {#if table.getFilteredSelectedRowModel().rows.length > 0}
+        <div transition:scale={{ duration: 400, easing: backOut, start: 0, opacity: 0 }}>
+          <Button variant="destructive" size="sm" onclick={deleteLogs}>
+            Delete {table.getFilteredSelectedRowModel().rows.length} log{table.getFilteredSelectedRowModel()
+              .rows.length > 1
+              ? 's'
+              : ''}
+          </Button>
+        </div>
+      {/if}
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          {#snippet child({ props })}
+            <Button {...props} variant="outline" size="sm" class="ml-auto">
+              <Settings2 class="size-6" />
+              View
+            </Button>
+          {/snippet}
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content align="end">
+          <DropdownMenu.Group>
+            <DropdownMenu.GroupHeading>Toggle columns</DropdownMenu.GroupHeading>
+            <DropdownMenu.Separator />
+            {#each table.getAllColumns().filter((col) => col.getCanHide()) as column (column.id)}
+              <DropdownMenu.CheckboxItem
+                class="capitalize"
+                controlledChecked
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                <Select.Trigger class="w-[180px]">
-                  {logLevelFilterValue}
-                </Select.Trigger>
-                <Select.Content>
-                  {#each logLevelValues as value}
-                    <Select.Item {value}>{value}</Select.Item>
-                  {/each}
-                </Select.Content>
-              </Select.Root>
-            </div>
-            {#if selectedRows.length > 0}
-              <Button onclick={deleteLogs} variant="destructive"
-                >Delete {selectedRows.length} log{selectedRows.length > 1 ? 's' : ''}</Button
-              >
-            {/if}
-          </div>
-
-          <!-- Log list -->
-          <Table.Root>
-            <Table.Header>
-              <Table.Row class="hover:bg-inherit">
-                <Table.Head></Table.Head>
-                <Table.Head>Status</Table.Head>
-                <Table.Head>Timestamp</Table.Head>
-                <Table.Head>Message</Table.Head>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {#if logs.length === 0}
-                <Table.Row class="hover:bg-inherit">
-                  <Table.Cell colspan={4}>
-                    <div
-                      class="flex w-full flex-row justify-center text-center text-base font-medium"
-                    >
-                      No logs found!
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              {/if}
-              {#each logs as log (log.id)}
-                <Table.Row class="log-row" data-log-id={log.id}>
-                  <Table.Cell>
-                    <div class="flex size-full flex-row items-center">
-                      <Checkbox
-                        class="log-row-checkbox"
-                        name="logRow"
-                        data-value={String(log.id)}
-                        checked={selectedRows.includes(log.id)}
-                      />
-                    </div>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <LogLevelPill level={log.level} />
-                  </Table.Cell>
-                  <Table.Cell class="font-medium">
-                    {formatTimestamp(log.timestamp)}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {log.message}
-                  </Table.Cell>
-                </Table.Row>
+                {column.id}
+              </DropdownMenu.CheckboxItem>
+            {/each}
+          </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    </div>
+    <!-- Logs table -->
+    <div class="rounded-md border">
+      <Table.Root>
+        <Table.Header>
+          {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
+            <Table.Row>
+              {#each headerGroup.headers as header (header.id)}
+                <Table.Head>
+                  {#if !header.isPlaceholder}
+                    <FlexRender
+                      content={header.column.columnDef.header}
+                      context={header.getContext()}
+                    />
+                  {/if}
+                </Table.Head>
               {/each}
-              {#if hasMoreLogs}
-                <Table.Row class="hover:bg-inherit">
-                  <Table.Cell colspan={4}>
-                    <div class="flex w-full flex-row items-center justify-center">
-                      <Button
-                        loading={isFetchingMoreLogs}
-                        disabled={isFetchingMoreLogs}
-                        class="mx-auto"
-                        onclick={() => fetchLogs()}>Load more</Button
-                      >
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              {/if}
-            </Table.Body>
-          </Table.Root>
-        </Card.Content>
-        <Card.Footer>
-          <div class="text-xs text-muted-foreground">
-            Showing <strong>{logs.length > 0 ? '1' : '0'}-{logs.length}</strong> of
-            <strong>{totalLogs}</strong> log entries
-          </div>
-        </Card.Footer>
-      </Card.Root>
-    </main>
+            </Table.Row>
+          {/each}
+        </Table.Header>
+        <Table.Body>
+          {#each table.getRowModel().rows as row (row.id)}
+            <Table.Row data-state={row.getIsSelected() && 'selected'}>
+              {#each row.getVisibleCells() as cell (cell.id)}
+                <Table.Cell>
+                  <FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
+                </Table.Cell>
+              {/each}
+            </Table.Row>
+          {:else}
+            <Table.Row>
+              <Table.Cell colspan={columns.length} class="h-24 text-center">No results.</Table.Cell>
+            </Table.Row>
+          {/each}
+        </Table.Body>
+      </Table.Root>
+    </div>
+    <!-- Table footer -->
+    <div class="flex flex-row items-center justify-between py-4">
+      <!-- Page number / Total pages -->
+      <div class="text-sm font-medium text-muted-foreground">
+        {table.getFilteredSelectedRowModel().rows.length} of{' '}
+        {table.getFilteredRowModel().rows.length} row(s) selected.
+      </div>
+      <div class="flex flex-row items-center space-x-6 lg:space-x-8">
+        <!-- Page size selection -->
+        <div class="flex flex-row items-center gap-2">
+          <Label for="pageSizeSelect">Rows per page</Label>
+          <Select.Root
+            type="single"
+            name="pageSizeSelect"
+            value={logs.pageSize.toString()}
+            onValueChange={(e) => {
+              logs.pageSize = parseInt(e);
+              table.setPageIndex(0);
+              table.setPageSize(logs.pageSize);
+              fetchLogs();
+            }}
+          >
+            <Select.Trigger class="w-[80px]">{logs.pageSize}</Select.Trigger>
+            <Select.Content>
+              <Select.Item value="10">10</Select.Item>
+              <Select.Item value="30">30</Select.Item>
+              <Select.Item value="50">50</Select.Item>
+              <Select.Item value="100">100</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </div>
+
+        <!-- Current page index / Total pages -->
+        <span class="text-sm font-semibold">
+          Page {logs.page + 1} of {Math.ceil(logs.totalLogs / logs.pageSize)}
+        </span>
+
+        <!-- Pagination buttons -->
+        <div class="flex items-center justify-end space-x-2">
+          <Button
+            variant="outline"
+            class="aspect-square size-8 p-1"
+            onclick={previousPage}
+            disabled={logs.page === 0}
+          >
+            <ChevronLeft class="size-full" />
+          </Button>
+          <Button
+            variant="outline"
+            class="aspect-square size-8 p-1"
+            onclick={nextPage}
+            disabled={logs.page === Math.ceil(logs.totalLogs / logs.pageSize) - 1}
+          >
+            <ChevronRight class="size-full" />
+          </Button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

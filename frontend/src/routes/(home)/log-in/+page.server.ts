@@ -2,7 +2,7 @@ import type { Actions } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { generateAccessToken } from '$lib/server/auth';
 import { fail } from '@sveltejs/kit';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { findUserByUsername } from '$lib/server/db/user';
 
 export const actions: Actions = {
@@ -22,7 +22,7 @@ export const actions: Actions = {
       // If user does not exist, return error
       if (!user) return fail(400, { error: 'No account with this username!' });
 
-      const compare = await bcrypt.compare(password, user.passwordHash);
+      const compare = bcrypt.compareSync(password, user.passwordHash);
 
       // If password is incorrect, return error
       if (!compare) return fail(400, { error: 'Incorrect password!' });

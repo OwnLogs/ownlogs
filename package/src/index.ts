@@ -1,13 +1,14 @@
-type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
-type Log = { level: LogLevel; message: string; timestamp?: Date };
-type Config = { backendUrl: string; bufferSize?: number };
+import { type IncomingLog } from '@shared/types';
+
+type Config = { backendUrl: string; bufferSize?: number; serverName?: string };
 
 class Logger {
   #backendUrl: string;
-  #buffer: Array<Log> = [];
+  #buffer: Array<IncomingLog> = [];
   #bufferSize: number = 10; // Number of logs before sending
   #isFlushing: boolean = false; // Flag to indicate if a flush is in progress
-  #queue: Array<Log> = []; // Queue to store logs while flushing
+  #queue: Array<IncomingLog> = []; // Queue to store logs while flushing
+  #serverName?: string; // Name of the server
   static #COLORS: Map<string, string> = new Map([
     ['red', '\x1b[31m'],
     ['green', '\x1b[32m'],
@@ -31,46 +32,72 @@ class Logger {
     return messages.join(' ');
   }
 
+  /**
+   * Extracts the file path and line number of the caller from the stack trace.
+   *
+   * @returns {string} The source of the log (file path and line number).
+   * @private
+   */
+  static #getCallerInfo(): string {
+    const error = new Error();
+    const stack = error.stack?.split('\n') || [];
+    const callerLine = stack[3]?.trim();
+    const match = callerLine?.match(/\((.*):(\d+):(\d+)\)/); // Extract file path and line number
+    if (match) {
+      const [_, filePath, lineNumber] = match;
+      return `${filePath}:${lineNumber}`;
+    }
+
+    return 'unknown';
+  }
+
   debug(...messages: any[]) {
     const message = Logger.#formatMessage(messages);
+    const source = Logger.#getCallerInfo();
     console.log(
       `${Logger.#COLORS.get('bgWhite')}${Logger.#COLORS.get('black')}[ DEBUG ]${Logger.#COLORS.get('reset')} ${message}`
     );
-    this.#pushLog({ level: 'debug', message, timestamp: new Date() });
+    this.#pushLog({ level: 'debug', message, source, timestamp: new Date() });
   }
 
   info(...messages: any[]) {
     const message = Logger.#formatMessage(messages);
+    const source = Logger.#getCallerInfo();
     console.log(`${Logger.#COLORS.get('bgBlue')}[ INFO ]${Logger.#COLORS.get('reset')} ${message}`);
-    this.#pushLog({ level: 'info', message, timestamp: new Date() });
+    this.#pushLog({ level: 'info', message, source, timestamp: new Date() });
   }
 
   warn(...messages: any[]) {
     const message = Logger.#formatMessage(messages);
+    const source = Logger.#getCallerInfo();
     console.warn(
       `${Logger.#COLORS.get('bgYellow')}[ WARN ]${Logger.#COLORS.get('reset')} ${message}`
     );
-    this.#sendLogImmediately({ level: 'warn', message, timestamp: new Date() });
+    this.#sendLogImmediately({ level: 'warn', message, source, timestamp: new Date() });
   }
 
   error(...messages: any[]) {
     const message = Logger.#formatMessage(messages);
+    const source = Logger.#getCallerInfo();
     console.error(
       `${Logger.#COLORS.get('bgRed')}[ ERROR ]${Logger.#COLORS.get('reset')} ${message}`
     );
     this.#sendLogImmediately({
       level: 'error',
       message,
+      source,
       timestamp: new Date()
     });
   }
 
   fatal(...messages: any[]) {
     const message = Logger.#formatMessage(messages);
+    const source = Logger.#getCallerInfo();
     console.error(`${Logger.#COLORS.get('red')}[ FATAL ]${Logger.#COLORS.get('reset')} ${message}`);
     this.#sendLogImmediately({
       level: 'fatal',
       message,
+      source,
       timestamp: new Date()
     });
   }
@@ -88,16 +115,26 @@ class Logger {
       }
       this.#bufferSize = config.bufferSize;
     }
+
+    if (config.serverName) {
+      if (config.serverName.length > 255) {
+        throw new Error('serverName must be less than 256 characters');
+      }
+
+      this.#serverName = config.serverName;
+    }
   }
 
-  #pushLog(log: Log) {
+  #pushLog(log: IncomingLog) {
+    log.serverName = this.#serverName;
     this.#buffer.push(log);
     if (this.#buffer.length >= this.#bufferSize) {
       this.#flush();
     }
   }
 
-  async #sendLogImmediately(log: Log) {
+  async #sendLogImmediately(log: IncomingLog) {
+    log.serverName = this.#serverName;
     try {
       await fetch(this.#backendUrl + '/logs', {
         method: 'POST',

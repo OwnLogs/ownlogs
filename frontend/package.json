@@ -15,6 +15,7 @@
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@types/eslint": "^9.6.0",
+    "@types/node": "^22.9.1",
     "autoprefixer": "^10.4.20",
     "bits-ui": "1.0.0-next.63",
     "clsx": "^2.1.1",
@@ -36,15 +37,17 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",
+    "vaul-svelte": "1.0.0-next.3",
     "vite": "^5.0.3"
   },
   "dependencies": {
     "@sveltejs/adapter-node": "^5.2.9",
     "@tanstack/table-core": "^8.20.5",
     "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.7",
-    "apexcharts": "^4.0.0",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.4"
   }

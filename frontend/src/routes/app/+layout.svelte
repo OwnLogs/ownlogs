@@ -23,7 +23,7 @@
                 <Breadcrumb.Item>
                   <Breadcrumb.Link href={breadcrumb.url}>{breadcrumb.name}</Breadcrumb.Link>
                 </Breadcrumb.Item>
-                <Breadcrumb.Separator class="hidden md:block" />
+                <Breadcrumb.Separator />
               {:else}
                 <Breadcrumb.Page>
                   <Breadcrumb.Link>{breadcrumb.name}</Breadcrumb.Link>

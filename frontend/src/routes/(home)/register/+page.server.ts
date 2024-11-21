@@ -2,7 +2,7 @@ import type { Actions } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { generateAccessToken } from '$lib/server/auth';
 import { fail } from '@sveltejs/kit';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { usernameIsTaken, createNewUser } from '$lib/server/db/user';
 
 export const actions: Actions = {

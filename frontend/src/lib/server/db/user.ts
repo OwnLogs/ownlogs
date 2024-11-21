@@ -19,14 +19,20 @@ export async function createNewUser(
 }
 
 export async function findUserByUsername(username: string): Promise<User | null> {
-  const [rows] = await db.execute<RowDataPacket[]>('SELECT * FROM user WHERE username = ?', [
-    username
-  ]);
-  if (rows.length === 0) return null;
-  return rows[0] as User;
+  try {
+    const [rows] = await db.execute<RowDataPacket[]>(
+      'SELECT * FROM user WHERE BINARY username = ?',
+      [username]
+    );
+    if (rows.length === 0) return null;
+    return rows[0] as User;
+  } catch (error) {
+    console.error('Error finding user by username:', error);
+    return null;
+  }
 }
 
-export async function usernameIsTaken(username: string) {
+export async function usernameIsTaken(username: string): Promise<boolean> {
   const user = await findUserByUsername(username);
   if (user === null) return false;
   return user.username === username;

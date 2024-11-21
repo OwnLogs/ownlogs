@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { BadgeCheck, ChevronsUpDown, LogOut } from 'lucide-svelte';
+  import { User as UserIcon, ChevronsUpDown, LogOut, Settings, Sun, Moon } from 'lucide-svelte';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
   import { useSidebar } from '$lib/components/ui/sidebar/index.js';
   import type { User } from '$lib/server/db/user';
+  import { toggleMode, mode } from 'mode-watcher';
+    import { scale } from 'svelte/transition';
 
   let { user }: { user: User } = $props();
 
@@ -54,16 +56,39 @@
         </DropdownMenu.Label>
         <DropdownMenu.Separator />
         <DropdownMenu.Group>
-          <DropdownMenu.Item>
-            <BadgeCheck />
-            Account
-          </DropdownMenu.Item>
+          <a href="/app/account">
+            <DropdownMenu.Item>
+              <UserIcon />
+              Account
+            </DropdownMenu.Item>
+          </a>
+          <a href="/app/account/settings">
+            <DropdownMenu.Item>
+              <Settings />
+              Settings
+            </DropdownMenu.Item>
+          </a>
         </DropdownMenu.Group>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item>
-          <LogOut />
-          Log out
+        <DropdownMenu.Item onclick={toggleMode}>
+          {#if $mode === 'dark'}
+            <div in:scale>
+              <Moon class="size-6" />
+            </div>
+          {:else}
+            <div in:scale>
+              <Sun class="size-6" />
+            </div>
+          {/if}
+          {$mode === 'dark' ? 'Dark' : 'Light'} mode
         </DropdownMenu.Item>
+        <DropdownMenu.Separator />
+        <a href="/app/log-out">
+          <DropdownMenu.Item>
+            <LogOut />
+            Log out
+          </DropdownMenu.Item>
+        </a>
       </DropdownMenu.Content>
     </DropdownMenu.Root>
   </Sidebar.MenuItem>

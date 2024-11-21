@@ -21,12 +21,4 @@ declare global {
   }
 }
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
-export interface Log {
-  id: number;
-  level: LogLevel;
-  message: string;
-  timestamp: string;
-}
-
 export {};

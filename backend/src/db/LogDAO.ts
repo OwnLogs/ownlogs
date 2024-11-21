@@ -1,25 +1,8 @@
 import DB from '.';
 import { format } from 'date-fns';
-
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
-
-class Log {
-  id?: number;
-  level: LogLevel;
-  message: string;
-  timestamp: Date;
-
-  constructor(data: Log) {
-    this.id = data.id;
-    this.level = data.level;
-    this.message = data.message;
-    this.timestamp = data.timestamp;
-  }
-}
+import { IncomingLog, type Log, type LogLevel } from '@shared/types';
 
 class LogDAO {
-  #db = DB.getInstance();
-
   async insertLogs(logs: Log[]): Promise<Log[]> {
     const newLogs: Log[] = [];
     for (const log of logs) {
@@ -30,67 +13,58 @@ class LogDAO {
   }
 
   #convertToLog(row: any): Log {
-    return new Log({
-      id: row.id,
-      level: row.level,
-      message: row.message,
-      timestamp: row.timestamp
-    });
+    return row as Log;
   }
 
-  async insertLog(log: Log): Promise<Log> {
+  async insertLog(log: IncomingLog): Promise<Log> {
     const sql = `
-      INSERT INTO logs (level, message, timestamp)
-      VALUES (?, ?, ?)
+      INSERT INTO logs (level, message, timestamp, source, serverName)
+      VALUES (?, ?, ?, ?, ?)
     `;
     const formattedTimestamp = format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss');
-    const params = [log.level, log.message, formattedTimestamp];
-    const insertId = await this.#db.execute(sql, params);
-    log.id = insertId;
-    return log;
+    const params = [log.level, log.message, formattedTimestamp, log.source, log.serverName || null];
+    const insertId = await DB.execute(sql, params);
+    (log as Log).id = insertId;
+    return log as Log;
   }
 
   async getLogs(
-    limit: number = 50,
-    offset: number = 0,
-    level: LogLevel | 'all'
+    pageSize: number = 50,
+    page: number = 0
   ): Promise<{
     logs: Log[];
-    total: number;
-    hasMore: boolean;
+    totalLogs: number;
     success: boolean;
     error?: unknown;
   }> {
     try {
+      // TODO: fix this ugly ass query
       const getLogsSQL = `
         SELECT *
         FROM logs
-        ${level !== 'all' ? 'WHERE level = "' + level + '"' : ''}
         ORDER BY timestamp DESC, id DESC
         LIMIT ?
         OFFSET ?
       `;
-      const logsRows = await this.#db.query<any[]>(getLogsSQL, [limit, offset]);
+      const logsRows = await DB.query<any[]>(getLogsSQL, [pageSize, page * pageSize]);
       const logs = logsRows.map(this.#convertToLog);
+
       const totalNumberOfLogsSQL = `
         SELECT COUNT(*) as total
         FROM logs
-        ${level !== 'all' ? 'WHERE level = "' + level + '"' : ''}
       `;
-      const totalNumberOfLogs = await this.#db.query<any[]>(totalNumberOfLogsSQL);
+      const totalNumberOfLogs = await DB.query<any[]>(totalNumberOfLogsSQL);
 
       return {
         logs,
-        total: totalNumberOfLogs[0].total,
-        hasMore: totalNumberOfLogs[0].total > offset + limit,
+        totalLogs: totalNumberOfLogs[0].total,
         success: true
       };
     } catch (error) {
       console.error('Error getting logs:', error);
       return {
         logs: [],
-        total: 0,
-        hasMore: false,
+        totalLogs: 0,
         error: error,
         success: false
       };
@@ -103,7 +77,7 @@ class LogDAO {
         DELETE FROM logs
         WHERE id = ?
       `;
-      await this.#db.query(sql, [id]);
+      await DB.query(sql, [id]);
       return true;
     } catch (error) {
       console.error('Error deleting log:', error);
@@ -119,8 +93,7 @@ class LogDAO {
       FROM logs
       GROUP BY level;
     `;
-    const statisticsRows: { level: LogLevel; count: number }[] =
-      await this.#db.query<[]>(statisticsSQL);
+    const statisticsRows: { level: LogLevel; count: number }[] = await DB.query<[]>(statisticsSQL);
     const statistics: { [key in LogLevel]: number } = {
       debug: 0,
       info: 0,
@@ -132,8 +105,22 @@ class LogDAO {
       statistics[row.level] = row.count;
     }
 
-    const recentLogs = await this.getLogs(10, 0, 'all');
+    const recentLogs = await this.getLogs(10, 0);
     return { ...statistics, recentLogs: recentLogs.logs };
+  }
+
+  async pruneLogs(limit: number) {
+    await DB.query(
+      `DELETE logs
+       FROM logs
+       JOIN (
+         SELECT id
+         FROM logs
+         ORDER BY timestamp ASC
+         LIMIT ?
+       ) AS subquery ON logs.id = subquery.id;`,
+      [limit]
+    );
   }
 }
 
