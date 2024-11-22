@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { User as UserIcon, ChevronsUpDown, LogOut, Settings, Sun, Moon } from 'lucide-svelte';
+  import { ChevronsUpDown, LogOut, Settings, Sun, Moon } from 'lucide-svelte';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
   import { useSidebar } from '$lib/components/ui/sidebar/index.js';
   import type { User } from '$lib/server/db/user';
   import { toggleMode, mode } from 'mode-watcher';
-    import { scale } from 'svelte/transition';
+  import { scale } from 'svelte/transition';
 
   let { user }: { user: User } = $props();
 
@@ -56,12 +56,6 @@
         </DropdownMenu.Label>
         <DropdownMenu.Separator />
         <DropdownMenu.Group>
-          <a href="/app/account">
-            <DropdownMenu.Item>
-              <UserIcon />
-              Account
-            </DropdownMenu.Item>
-          </a>
           <a href="/app/account/settings">
             <DropdownMenu.Item>
               <Settings />

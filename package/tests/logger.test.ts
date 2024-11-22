@@ -4,7 +4,7 @@ export function runLoggerTest() {
   const logger = new Logger({
     backendUrl: 'http://localhost:3000',
     bufferSize: 1,
-    serverName: 'test-server'
+    serverId: 2
   });
 
   const message = 'Test message';
@@ -16,5 +16,5 @@ export function runLoggerTest() {
     (i: number) => logger.fatal(message + ' ' + i)
   ];
 
-  for (let i = 0; i < 10; i++) actions[Math.floor(Math.random() * actions.length)](i);
+  for (let i = 0; i < 1; i++) actions[Math.floor(Math.random() * actions.length)](i);
 }

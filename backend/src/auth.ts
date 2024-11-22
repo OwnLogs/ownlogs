@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Response, Request, NextFunction } from 'express';
 import LogDAO from './db/LogDAO';
 import { Log } from '@shared/types';
-import { logEventEmitter } from './routes/ws';
+import { logEventEmitter } from './routes/ws/logs';
 
 interface AuthenticatedRequest extends Request {
   user?: any;
@@ -21,11 +21,9 @@ export const storeUnauthenticatedRequest = async () => {
 export const authenticate = async (token: string): Promise<boolean> => {
   try {
     if (!token) throw new Error('No token was provided!');
-    jwt.verify(token, process.env.JWT_SECRET as string, async (err, decoded: unknown) => {
-      if (err) throw new Error(err.message);
-      const user = await UserDAO.findUserByUsername(decoded as string);
-      if (!user) throw new Error('User not found');
-    });
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET as string);
+    const user = await UserDAO.findUserByUsername(decoded as string);
+    if (!user) throw new Error('User not found');
     return true;
   } catch (error) {
     await storeUnauthenticatedRequest();

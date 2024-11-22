@@ -17,11 +17,12 @@
     "@types/eslint": "^9.6.0",
     "@types/node": "^22.9.1",
     "autoprefixer": "^10.4.20",
-    "bits-ui": "1.0.0-next.63",
+    "bits-ui": "1.0.0-next.64",
     "clsx": "^2.1.1",
     "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.36.0",
+    "formsnap": "2.0.0-next.1",
     "globals": "^15.0.0",
     "lucide-svelte": "^0.460.1",
     "mode-watcher": "^0.5.0",
@@ -31,6 +32,7 @@
     "svelte": "^5.2.4",
     "svelte-check": "^4.0.0",
     "svelte-sonner": "^0.3.28",
+    "sveltekit-superforms": "^2.20.1",
     "tailwind-merge": "^2.5.4",
     "tailwind-variants": "^0.3.0",
     "tailwindcss": "^3.4.9",
@@ -38,7 +40,8 @@
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",
     "vaul-svelte": "1.0.0-next.3",
-    "vite": "^5.0.3"
+    "vite": "^5.0.3",
+    "zod": "^3.23.8"
   },
   "dependencies": {
     "@sveltejs/adapter-node": "^5.2.9",
@@ -49,6 +52,7 @@
     "bcryptjs": "^2.4.3",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.4"
+    "mysql2": "^3.11.4",
+    "runed": "^0.15.3"
   }
 }

@@ -8,16 +8,21 @@ import { findUserByUsername, type User } from './db/user';
 async function auth(token: string): Promise<User | null> {
   return new Promise((resolve, reject) => {
     if (!token) reject({ error: 'No token was provided!' });
-    jwt.verify(token, JWT_SECRET, async (err, decoded: unknown) => {
-      if (err) return reject({ error: err });
-      try {
-        const user = await findUserByUsername(decoded as string);
-        resolve(user);
-      } catch (error) {
-        console.error('Error finding user:', error);
-        reject({ error: 'User not found' });
-      }
-    });
+    try {
+      jwt.verify(token, JWT_SECRET, async (err, decoded: unknown) => {
+        if (err) return reject({ error: err });
+        try {
+          const user = await findUserByUsername(decoded as string);
+          resolve(user);
+        } catch (error) {
+          console.error('Error finding user:', error);
+          reject({ error: 'User not found' });
+        }
+      });
+    } catch (error) {
+      console.error('Error verifying token:', error);
+      reject({ error: 'Error verifying token' });
+    }
   });
 }
 

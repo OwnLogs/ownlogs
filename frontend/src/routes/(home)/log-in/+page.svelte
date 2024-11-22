@@ -5,7 +5,7 @@
   import { enhance } from '$app/forms';
   import { toast } from 'svelte-sonner';
 
-  const { form } = $props();
+  const { form, data } = $props();
   let isLoading: boolean = $state(false);
 
   $effect(() => {
@@ -18,9 +18,11 @@
 <div
   class="container relative grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0"
 >
-  <Button href="/register" variant="ghost" class="absolute right-4 top-4 md:right-8 md:top-8">
-    Register
-  </Button>
+  {#if !data.hasARegisteredUser}
+    <Button href="/register" variant="ghost" class="absolute right-4 top-4 md:right-8 md:top-8">
+      Register
+    </Button>
+  {/if}
   <div class="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
     <div
       class="absolute inset-0 bg-cover"

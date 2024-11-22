@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import LogDAO from '../db/LogDAO';
-import Logger from '../logger';
+import LogDAO from '../../db/LogDAO';
+import Logger from '../../logger';
 
 export async function deleteLog(req: Request, res: Response) {
   const id = req.body.id;

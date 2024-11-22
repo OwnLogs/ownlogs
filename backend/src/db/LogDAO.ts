@@ -17,14 +17,18 @@ class LogDAO {
   }
 
   async insertLog(log: IncomingLog): Promise<Log> {
+    if (!log.serverId) {
+      throw new Error('Server ID is required to insert a log');
+    }
     const sql = `
-      INSERT INTO logs (level, message, timestamp, source, serverName)
+      INSERT INTO logs (level, message, timestamp, source, serverId)
       VALUES (?, ?, ?, ?, ?)
     `;
     const formattedTimestamp = format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss');
-    const params = [log.level, log.message, formattedTimestamp, log.source, log.serverName || null];
+
+    const params = [log.level, log.message, formattedTimestamp, log.source, log.serverId];
     const insertId = await DB.execute(sql, params);
-    (log as Log).id = insertId;
+    (log as Log).logId = insertId;
     return log as Log;
   }
 
@@ -38,15 +42,25 @@ class LogDAO {
     error?: unknown;
   }> {
     try {
-      // TODO: fix this ugly ass query
       const getLogsSQL = `
-        SELECT *
+        SELECT
+        logs.id logId,
+        logs.level logLevel,
+        logs.message logMessage,
+        logs.source logSource,
+        logs.timestamp logTimestamp,
+        server.id serverId,
+        server.name serverName,
+        server.description serverDescription,
+        server.publicUrl serverUrl
         FROM logs
-        ORDER BY timestamp DESC, id DESC
+        JOIN server ON logs.serverId = server.id
+        ORDER BY logs.timestamp DESC, logs.id DESC
         LIMIT ?
         OFFSET ?
       `;
       const logsRows = await DB.query<any[]>(getLogsSQL, [pageSize, page * pageSize]);
+
       const logs = logsRows.map(this.#convertToLog);
 
       const totalNumberOfLogsSQL = `
@@ -121,6 +135,15 @@ class LogDAO {
        ) AS subquery ON logs.id = subquery.id;`,
       [limit]
     );
+  }
+
+  async getKnownServerIds(): Promise<number[]> {
+    const sql = `
+      SELECT id
+      FROM server
+    `;
+    const rows = await DB.query<any[]>(sql);
+    return rows.map((row) => row.id);
   }
 }
 

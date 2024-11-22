@@ -10,7 +10,9 @@
 
   $effect(() => {
     if (form?.error) {
-      toast.error(form.error);
+      toast.error(form.message);
+    } else if (form?.success) {
+      toast.success(form.message);
     }
   });
 </script>

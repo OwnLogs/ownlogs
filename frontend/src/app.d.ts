@@ -17,6 +17,8 @@ declare global {
       };
 
       token?: string;
+
+      hasARegisteredUser?: boolean;
     }
   }
 }

@@ -39,6 +39,9 @@ const defaultBackendConfig: FinalBackendConfig = {
     prune_batch_size: 1000, // Remove 1000 logs at a time
     prune_interval: 1 * 60 * 60 // 1 minute
   },
+  allowedIps: [
+    '::ffff:127.0.0.1', // IPv4 localhost
+  ]
 };
 
 export const getBackendConfig = (): FinalBackendConfig => {

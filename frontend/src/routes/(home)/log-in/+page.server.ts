@@ -37,6 +37,6 @@ export const actions: Actions = {
       return fail(400, { error: 'An error occurred!' });
     }
 
-    throw redirect(303, '/app');
+    throw redirect(303, '/app/logs');
   }
 };

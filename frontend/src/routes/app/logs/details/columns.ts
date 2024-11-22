@@ -4,7 +4,6 @@ import type { ColumnDef } from '@tanstack/table-core';
 import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { createRawSnippet } from 'svelte';
 import { formatTimestamp } from '$lib/utils';
-// import DataTableActions from './data-table-actions.svelte';
 import LogLevel from '$lib/components/LogLevel.svelte';
 
 export interface Logs {
@@ -36,15 +35,15 @@ export const columns: ColumnDef<Log>[] = [
     enableHiding: false
   },
   {
-    accessorKey: 'level',
+    accessorKey: 'logLevel',
     header: 'Level',
     cell: ({ row }) => {
-      return renderComponent(LogLevel, { level: row.original.level });
+      return renderComponent(LogLevel, { level: row.original.logLevel });
     }
   },
   {
     accessorKey: 'serverName',
-    header: 'Server Name',
+    header: 'Server',
     cell: ({ row }) => {
       const serverNameCellSnippet = createRawSnippet<[Date]>((getServerName) => {
         const serverName = getServerName();
@@ -57,7 +56,7 @@ export const columns: ColumnDef<Log>[] = [
     }
   },
   {
-    accessorKey: 'timestamp',
+    accessorKey: 'logTimestamp',
     header: 'Timestamp',
     cell: ({ row }) => {
       const timestampCellSnippet = createRawSnippet<[Date]>((getTimesatmp) => {
@@ -68,11 +67,11 @@ export const columns: ColumnDef<Log>[] = [
         };
       });
 
-      return renderSnippet(timestampCellSnippet, row.getValue('timestamp'));
+      return renderSnippet(timestampCellSnippet, row.getValue('logTimestamp'));
     }
   },
   {
-    accessorKey: 'source',
+    accessorKey: 'logSource',
     header: 'Source',
     cell: ({ row }) => {
       const sourceCellSnippet = createRawSnippet<[Date]>((getSource) => {
@@ -82,20 +81,11 @@ export const columns: ColumnDef<Log>[] = [
         };
       });
 
-      return renderSnippet(sourceCellSnippet, row.getValue('source'));
+      return renderSnippet(sourceCellSnippet, row.getValue('logSource'));
     }
   },
   {
-    accessorKey: 'message',
+    accessorKey: 'logMessage',
     header: 'Message'
   }
-
-  // Tried to get the row action working but the component cannot communicate with the table to insert a new row upon deletion
-  // {
-  //   id: 'actions',
-  //   cell: ({ row }) => {
-  //     // You can pass whatever you need from `row.original` to the component
-  //     return renderComponent(DataTableActions, { id: row.original.id });
-  //   }
-  // }
 ];

@@ -1,11 +1,12 @@
 import { Request } from 'express';
-import LogDAO from '../db/LogDAO';
-import Logger from '../logger';
+import LogDAO from '../../db/LogDAO';
+import Logger from '../../logger';
 import WebSocket from 'ws';
-import { authenticate, storeUnauthenticatedRequest } from '../auth';
+import { authenticate, storeUnauthenticatedRequest } from '../../auth';
 import osu from 'node-os-utils';
 import { ServerStatistics } from '@shared/types';
-import DB from '../db';
+import DB from '../../db';
+import { logEventEmitter } from './logs';
 
 const INTERVAL_BETWEEN_UPDATES = 1000;
 
@@ -23,7 +24,7 @@ async function getServerStatistics(): Promise<ServerStatistics> {
   };
 }
 
-export async function logsOverviewWs(ws: WebSocket, req: Request) {
+export async function logsOverview(ws: WebSocket, req: Request) {
   const token = req.cookies['token'];
   const auth = await authenticate(token);
 
@@ -62,10 +63,36 @@ export async function logsOverviewWs(ws: WebSocket, req: Request) {
   // Send periodic updates
   const intervalId = setInterval(async () => {
     const serverStatistics = await getServerStatistics();
+
     ws.send(JSON.stringify({ action: 'serverStatisticsUpdate', serverStatistics, success: true }));
   }, INTERVAL_BETWEEN_UPDATES);
 
+  const logsChanged = async () => {
+    try {
+      const logsOverviewStatistics = await LogDAO.getLogsOverviewStatistics();
+      ws.send(
+        JSON.stringify({
+          action: 'newLogsReceived',
+          logsOverviewStatistics,
+          success: true
+        })
+      );
+    } catch (error) {
+      Logger.error('Error getting logs overview statistics:', error);
+      ws.send(
+        JSON.stringify({
+          action: 'newLogsReceived',
+          success: false,
+          message: 'Error getting logs overview statistics'
+        })
+      );
+    }
+  };
+
+  logEventEmitter.on('newLogs', logsChanged);
+
   ws.on('close', () => {
     clearInterval(intervalId);
+    logEventEmitter.removeListener('newLogs', logsChanged);
   });
 }

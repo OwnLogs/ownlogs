@@ -1,28 +1,29 @@
-<script lang="ts" generics="TData, TValue">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Select from '$lib/components/ui/select/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { pageMetadata } from '$lib/stores';
+<script lang="ts">
+  import { Button } from '$lib/components/ui/button';
+  import { Progress } from '$lib/components/ui/progress/index.js';
+  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
+  import * as Card from '$lib/components/ui/card';
+  import * as Table from '$lib/components/ui/table';
+  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
   import {
-    type VisibilityState,
-    type RowSelectionState,
-    getCoreRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    getFilteredRowModel
-  } from '@tanstack/table-core';
-  import { ChevronLeft, ChevronRight, Settings2 } from 'lucide-svelte';
-
-  import { onMount } from 'svelte';
+    Logs,
+    ArrowUpRight,
+    OctagonAlert,
+    Skull,
+    TriangleAlert,
+    Cpu,
+    MemoryStick,
+    Database,
+    ClockArrowUp,
+    Info
+  } from 'lucide-svelte';
+  import LogLevel from '$lib/components/LogLevel.svelte';
+  import { pageMetadata } from '$lib/stores';
   import { WEBSOCKET_URL } from '$lib/constants';
+  import { type LogLevel as LogLevelType, type Log, type ServerStatistics } from '@shared/types';
   import { toast } from 'svelte-sonner';
-  import { columns, type Logs } from './columns.js';
-  import { scale } from 'svelte/transition';
-  import { backOut } from 'svelte/easing';
+  import { onMount } from 'svelte';
+  import { cn, formatTimestamp, formatBytes } from '$lib/utils';
 
   pageMetadata.set({
     title: 'Logs overview',
@@ -30,33 +31,19 @@
     breadcrumbs: [{ name: 'Logs' }, { name: 'Overview' }]
   });
 
-  let logs: Logs = $state({
-    logs: [],
-    totalLogs: 0,
-    page: 0,
-    pageSize: 30
-  });
-  let realTime: boolean = $state(true);
   let socket: WebSocket | undefined = $state();
-  let columnVisibility = $state<VisibilityState>({ source: false });
-  let rowSelection = $state<RowSelectionState>({});
+  let serverStatistics: ServerStatistics | undefined = $state();
+  let logsOverviewStatistics:
+    | ({ [key in LogLevelType]: number } & { recentLogs: Log[]; total: number })
+    | undefined = $state();
 
-  // Fetches logs based on the specified log level
-  async function fetchLogs(page: number = 0) {
-    if (!socket) return;
-
-    socket.send(JSON.stringify({ action: 'fetchLogs', page, pageSize: logs.pageSize }));
-  }
-
-  // Connect to websocket and listen for new logs
   onMount(() => {
-    socket = new WebSocket(WEBSOCKET_URL + '/logs');
+    socket = new WebSocket(WEBSOCKET_URL + '/getLogsOverviewStatistics');
 
     // Listen for messages
     socket.addEventListener('message', (event) => {
       const response = JSON.parse(event.data);
 
-      // Handle errors
       if (!response.success) {
         toast.error('An error occurred while fetching logs');
         console.error(response.error);
@@ -65,30 +52,24 @@
 
       switch (response.action) {
         // When the server is receiving new logs
-        case 'newLogs': {
-          logs.logs = [...response.logs, ...(logs?.logs ?? [])].slice(0, logs.pageSize);
-          logs.totalLogs += response.logs.length;
+        case 'initial': {
+          logsOverviewStatistics = response.logsOverviewStatistics;
+          if (!logsOverviewStatistics) return;
+          setTotalNumberOfLogs();
+          serverStatistics = response.serverStatistics;
           break;
         }
 
-        // Response handling when fetching logs
-        case 'fetchLogs': {
-          logs = response;
-          table.setPageSize(logs.pageSize);
+        // When receiving periodic server statistics updates
+        case 'serverStatisticsUpdate': {
+          serverStatistics = response.serverStatistics;
           break;
         }
 
-        // Response handling when deleting logs
-        case 'deleteLogs': {
-          logs = {
-            ...logs,
-            ...response.logs
-          };
-
-          table.getRowModel().rows.forEach((row) => {
-            row.toggleSelected(false);
-          });
-
+        // When receiving new logs
+        case 'newLogsReceived': {
+          logsOverviewStatistics = response.logsOverviewStatistics;
+          setTotalNumberOfLogs();
           break;
         }
 
@@ -97,226 +78,310 @@
         }
       }
     });
-
-    // Fetching initial logs on connection
-    socket.addEventListener('open', () => {
-      fetchLogs();
-    });
   });
 
-  function nextPage() {
-    if (logs.page === Math.ceil(logs.totalLogs / logs.pageSize) - 1) return;
-    fetchLogs(logs.page + 1);
-  }
+  const formatUptime = (secs: number): string => {
+    const pad = (n: number) => (n < 10 ? `0${n}` : n);
+    const d = Math.floor(secs / 86400);
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor(secs / 60) - h * 60;
+    const s = Math.floor(secs - h * 3600 - m * 60);
+    let uptime = '';
+    if (d > 0) uptime += `${d}d `;
+    if (h > 0) uptime += `${pad(h)}h `;
+    if (m > 0) uptime += `${pad(m)}m `;
+    uptime += `${pad(s)}s`;
+    return uptime;
+  };
 
-  function previousPage() {
-    if (logs.page === 0) return;
-    fetchLogs(logs.page - 1);
-  }
+  const formatNumber = (number: number) => {
+    return new Intl.NumberFormat().format(number);
+  };
 
-  async function deleteLogs() {
-    if (!socket) return;
-
-    const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original.id);
-    socket.send(
-      JSON.stringify({
-        action: 'deleteLogs',
-        logIds: selectedRows,
-        page: logs.page,
-        pageSize: logs.pageSize
-      })
-    );
-  }
-
-  const table = createSvelteTable({
-    get data() {
-      return logs.logs;
-    },
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: (updater) => {
-      if (typeof updater === 'function') {
-        columnVisibility = updater(columnVisibility);
-      } else {
-        columnVisibility = updater;
-      }
-    },
-    onRowSelectionChange: (updater) => {
-      if (typeof updater === 'function') {
-        rowSelection = updater(rowSelection);
-      } else {
-        rowSelection = updater;
-      }
-    },
-    state: {
-      get columnVisibility() {
-        return columnVisibility;
-      },
-      get rowSelection() {
-        return rowSelection;
-      }
-    }
-  });
-
-  const realTimeChange = (e: boolean) => {
-    realTime = e;
-
-    if (!socket) return;
-
-    socket.send(JSON.stringify({ action: 'changeRealTime', realTime }));
-
-    if (realTime) {
-      fetchLogs();
-    }
+  const setTotalNumberOfLogs = () => {
+    if (!logsOverviewStatistics) return;
+    logsOverviewStatistics.total =
+      (logsOverviewStatistics?.debug ?? 0) +
+      (logsOverviewStatistics?.info ?? 0) +
+      (logsOverviewStatistics?.warn ?? 0) +
+      (logsOverviewStatistics?.error ?? 0) +
+      (logsOverviewStatistics?.fatal ?? 0);
   };
 </script>
 
-<div class="flex w-full flex-col">
-  <div class="gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-    <!-- Table heading -->
-    <div class="flex items-center gap-6 py-4">
-      <div class="flex items-center space-x-2">
-        <Checkbox id="realTimeLogs" checked={realTime} onCheckedChange={realTimeChange} />
-        <Label
-          for="realTimeLogs"
-          class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        >
-          Real-time
-        </Label>
-      </div>
-      {#if table.getFilteredSelectedRowModel().rows.length > 0}
-        <div transition:scale={{ duration: 400, easing: backOut, start: 0, opacity: 0 }}>
-          <Button variant="destructive" size="sm" onclick={deleteLogs}>
-            Delete {table.getFilteredSelectedRowModel().rows.length} log{table.getFilteredSelectedRowModel()
-              .rows.length > 1
-              ? 's'
-              : ''}
-          </Button>
+<div class="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+  <!-- Top row cards -->
+  <div class="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+    <Card.Root>
+      <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card.Title class="text-sm font-medium">Total Logs</Card.Title>
+        <Logs class="size-4 text-muted-foreground" />
+      </Card.Header>
+      <Card.Content>
+        {#if logsOverviewStatistics}
+          <div class="text-2xl font-bold">{formatNumber(logsOverviewStatistics?.total ?? 0)}</div>
+        {:else}
+          <!-- Show skeleton loader -->
+          <Skeleton class="h-[32px] w-[50px] rounded-lg" />
+        {/if}
+        <!-- <p class="text-muted-foreground text-xs">	20 today</p> -->
+      </Card.Content>
+    </Card.Root>
+    <Card.Root>
+      <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card.Title class="text-sm font-medium">Warnings</Card.Title>
+        <TriangleAlert
+          class={cn(
+            'size-4 text-muted-foreground',
+            (logsOverviewStatistics?.warn ?? 0) > 0 && 'text-amber-600'
+          )}
+        />
+      </Card.Header>
+      <Card.Content>
+        {#if logsOverviewStatistics}
+          <div class="text-2xl font-bold">{formatNumber(logsOverviewStatistics?.warn ?? 0)}</div>
+        {:else}
+          <!-- Show skeleton loader -->
+          <Skeleton class="h-[32px] w-[50px] rounded-lg" />
+        {/if}
+        <!-- <p class="text-muted-foreground text-xs">+180.1% from last month</p> -->
+      </Card.Content>
+    </Card.Root>
+    <Card.Root>
+      <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card.Title class="text-sm font-medium">Errors</Card.Title>
+        <OctagonAlert
+          class={cn(
+            'size-4 text-muted-foreground',
+            (logsOverviewStatistics?.error ?? 0) > 0 && 'text-red-600'
+          )}
+        />
+      </Card.Header>
+      <Card.Content>
+        {#if logsOverviewStatistics}
+          <div class="text-2xl font-bold">{formatNumber(logsOverviewStatistics?.error ?? 0)}</div>
+        {:else}
+          <!-- Show skeleton loader -->
+          <Skeleton class="h-[32px] w-[50px] rounded-lg" />
+        {/if}
+        <!-- <p class="text-muted-foreground text-xs">+19% from last month</p> -->
+      </Card.Content>
+    </Card.Root>
+    <Card.Root>
+      <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card.Title class="text-sm font-medium">Fatal errors</Card.Title>
+        <Skull
+          class={cn(
+            'size-4 text-muted-foreground',
+            (logsOverviewStatistics?.fatal ?? 0) > 0 && 'text-rose-600'
+          )}
+        />
+      </Card.Header>
+      <Card.Content>
+        {#if logsOverviewStatistics}
+          <div class="text-2xl font-bold">{formatNumber(logsOverviewStatistics?.fatal ?? 0)}</div>
+        {:else}
+          <!-- Show skeleton loader -->
+          <Skeleton class="h-[32px] w-[50px] rounded-lg" />
+        {/if}
+        <!-- <p class="text-muted-foreground text-xs">+201 since last hour</p> -->
+      </Card.Content>
+    </Card.Root>
+  </div>
+  <div class="grid gap-4 md:gap-8 xl:grid-cols-3">
+    <!-- Recent logs list -->
+    <Card.Root class="xl:col-span-2">
+      <Card.Header class="flex flex-row items-center">
+        <div class="grid gap-2">
+          <Card.Title>Logs</Card.Title>
+          <Card.Description>Most recent logs.</Card.Description>
         </div>
-      {/if}
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-          {#snippet child({ props })}
-            <Button {...props} variant="outline" size="sm" class="ml-auto">
-              <Settings2 class="size-6" />
-              View
-            </Button>
-          {/snippet}
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="end">
-          <DropdownMenu.Group>
-            <DropdownMenu.GroupHeading>Toggle columns</DropdownMenu.GroupHeading>
-            <DropdownMenu.Separator />
-            {#each table.getAllColumns().filter((col) => col.getCanHide()) as column (column.id)}
-              <DropdownMenu.CheckboxItem
-                class="capitalize"
-                controlledChecked
-                checked={column.getIsVisible()}
-                onCheckedChange={(value) => column.toggleVisibility(!!value)}
-              >
-                {column.id}
-              </DropdownMenu.CheckboxItem>
-            {/each}
-          </DropdownMenu.Group>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
-    </div>
-    <!-- Logs table -->
-    <div class="rounded-md border">
-      <Table.Root>
-        <Table.Header>
-          {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
+        <Button href="/app/logs/details" size="sm" class="ml-auto gap-1">
+          View All
+          <ArrowUpRight class="size-4" />
+        </Button>
+      </Card.Header>
+      <Card.Content>
+        <!-- Recent logs list -->
+        <Table.Root>
+          <Table.Header>
             <Table.Row>
-              {#each headerGroup.headers as header (header.id)}
-                <Table.Head>
-                  {#if !header.isPlaceholder}
-                    <FlexRender
-                      content={header.column.columnDef.header}
-                      context={header.getContext()}
-                    />
-                  {/if}
-                </Table.Head>
-              {/each}
+              <Table.Head>Status</Table.Head>
+              <Table.Head>Timestamp</Table.Head>
+              <Table.Head>Message</Table.Head>
             </Table.Row>
-          {/each}
-        </Table.Header>
-        <Table.Body>
-          {#each table.getRowModel().rows as row (row.id)}
-            <Table.Row data-state={row.getIsSelected() && 'selected'}>
-              {#each row.getVisibleCells() as cell (cell.id)}
-                <Table.Cell>
-                  <FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
-                </Table.Cell>
+          </Table.Header>
+          <Table.Body>
+            {#if logsOverviewStatistics}
+              {#if logsOverviewStatistics.recentLogs.length === 0}
+                <Table.Row class="hover:bg-inherit">
+                  <Table.Cell colspan={3}>
+                    <div
+                      class="flex w-full flex-row items-center justify-center gap-2 text-center text-base font-medium"
+                    >
+                      <Info class="size-5 text-muted-foreground" />
+                      No logs found!
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              {:else}
+                {#each logsOverviewStatistics.recentLogs as log}
+                  <Table.Row>
+                    <Table.Cell>
+                      <LogLevel level={log.logLevel} />
+                    </Table.Cell>
+                    <Table.Cell>{formatTimestamp(log.logTimestamp)}</Table.Cell>
+                    <Table.Cell>{log.logMessage}</Table.Cell>
+                  </Table.Row>
+                {/each}
+              {/if}
+            {:else}
+              <!-- Show skeleton loader with 10 logs inside (max number of logs returned so no layout shift id database has more than 10 logs) -->
+              {#each Array(10) as _}
+                <Table.Row>
+                  <Table.Cell>
+                    <Skeleton class="h-[20px] w-[55px] rounded-full" />
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Skeleton class="h-[20px] w-[140px] rounded-full" />
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Skeleton class="h-[20px] w-full rounded-full" />
+                  </Table.Cell>
+                </Table.Row>
               {/each}
-            </Table.Row>
+            {/if}
+          </Table.Body>
+        </Table.Root>
+      </Card.Content>
+    </Card.Root>
+
+    <!-- Server statistics -->
+    <Card.Root>
+      <Card.Header>
+        <div class="grid gap-2">
+          <Card.Title>Logs Server</Card.Title>
+          <Card.Description
+            >Get the logs server statistics about health and performance.</Card.Description
+          >
+        </div>
+      </Card.Header>
+      <Card.Content class="flex flex-col gap-4">
+        <!-- CPU Stats -->
+        <div class="flex h-12 flex-row items-center gap-4">
+          <Tooltip.Provider delayDuration={200}>
+            <Tooltip.Root>
+              <Tooltip.Trigger>
+                <Cpu class="size-8 text-muted-foreground" />
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                <p>CPU Usage</p>
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+          {#if serverStatistics}
+            <div class="flex grow flex-col gap-2">
+              <div class="text-sm font-semibold tracking-tight">
+                {serverStatistics.cpuUsage.toFixed(1)}%
+              </div>
+              <Progress class="h-3" value={serverStatistics.cpuUsage} />
+            </div>
           {:else}
-            <Table.Row>
-              <Table.Cell colspan={columns.length} class="h-24 text-center">No results.</Table.Cell>
-            </Table.Row>
-          {/each}
-        </Table.Body>
-      </Table.Root>
-    </div>
-    <!-- Table footer -->
-    <div class="flex flex-row items-center justify-between py-4">
-      <!-- Page number / Total pages -->
-      <div class="text-sm font-medium text-muted-foreground">
-        {table.getFilteredSelectedRowModel().rows.length} of{' '}
-        {table.getFilteredRowModel().rows.length} row(s) selected.
-      </div>
-      <div class="flex flex-row items-center space-x-6 lg:space-x-8">
-        <!-- Page size selection -->
-        <div class="flex flex-row items-center gap-2">
-          <Label for="pageSizeSelect">Rows per page</Label>
-          <Select.Root
-            type="single"
-            name="pageSizeSelect"
-            value={logs.pageSize.toString()}
-            onValueChange={(e) => {
-              logs.pageSize = parseInt(e);
-              table.setPageIndex(0);
-              table.setPageSize(logs.pageSize);
-              fetchLogs();
-            }}
-          >
-            <Select.Trigger class="w-[80px]">{logs.pageSize}</Select.Trigger>
-            <Select.Content>
-              <Select.Item value="10">10</Select.Item>
-              <Select.Item value="30">30</Select.Item>
-              <Select.Item value="50">50</Select.Item>
-              <Select.Item value="100">100</Select.Item>
-            </Select.Content>
-          </Select.Root>
+            <!-- Show skeleton loader -->
+            <div class="flex grow flex-col gap-3">
+              <Skeleton class="h-[15px] w-[30px] rounded-full" />
+              <Skeleton class="h-[12px] w-full rounded-full" />
+            </div>
+          {/if}
         </div>
 
-        <!-- Current page index / Total pages -->
-        <span class="text-sm font-semibold">
-          Page {logs.page + 1} of {Math.ceil(logs.totalLogs / logs.pageSize)}
-        </span>
-
-        <!-- Pagination buttons -->
-        <div class="flex items-center justify-end space-x-2">
-          <Button
-            variant="outline"
-            class="aspect-square size-8 p-1"
-            onclick={previousPage}
-            disabled={logs.page === 0}
-          >
-            <ChevronLeft class="size-full" />
-          </Button>
-          <Button
-            variant="outline"
-            class="aspect-square size-8 p-1"
-            onclick={nextPage}
-            disabled={logs.page === Math.ceil(logs.totalLogs / logs.pageSize) - 1}
-          >
-            <ChevronRight class="size-full" />
-          </Button>
+        <!-- RAM Stats -->
+        <div class="flex h-12 flex-row items-center gap-4">
+          <Tooltip.Provider delayDuration={200}>
+            <Tooltip.Root>
+              <Tooltip.Trigger>
+                <MemoryStick class="size-8 text-muted-foreground" />
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                <p>RAM Usage</p>
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+          {#if serverStatistics}
+            <div class="flex grow flex-col gap-2">
+              <div class="flex flex-row items-center justify-between">
+                <!-- Percentage -->
+                <span class="text-sm font-semibold tracking-tight"
+                  >{(100 - serverStatistics.memoryUsage.freeMemPercentage).toFixed(1)}%</span
+                >
+                <!-- Usage / Total -->
+                <span class="text-xs text-muted-foreground"
+                  >{formatBytes(serverStatistics.memoryUsage.usedMemMb * 1000000)} / {formatBytes(
+                    serverStatistics.memoryUsage.totalMemMb * 1000000
+                  )}</span
+                >
+              </div>
+              <Progress class="h-3" value={100 - serverStatistics.memoryUsage.freeMemPercentage} />
+            </div>
+          {:else}
+            <!-- Show skeleton loader -->
+            <div class="flex grow flex-col gap-3">
+              <div class="flex flex-row items-center justify-between">
+                <Skeleton class="h-[15px] w-[30px] rounded-full" />
+                <div class="flex flex-row items-center gap-1">
+                  <Skeleton class="h-[15px] w-[50px] rounded-full" />
+                  <Skeleton class="h-[15px] w-[50px] rounded-full" />
+                </div>
+              </div>
+              <Skeleton class="h-[12px] w-full rounded-full" />
+            </div>
+          {/if}
         </div>
-      </div>
-    </div>
+
+        <!-- Database size -->
+        <div class="flex h-12 flex-row items-center gap-4">
+          <Tooltip.Provider delayDuration={200}>
+            <Tooltip.Root>
+              <Tooltip.Trigger>
+                <Database class="size-8 text-muted-foreground" />
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                <p>Database Size</p>
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+          {#if serverStatistics}
+            <p class="font-mono font-medium text-foreground">
+              {formatBytes(serverStatistics.databaseSize)}
+            </p>
+          {:else}
+            <!-- Show skeleton loader -->
+            <Skeleton class="h-[15px] w-[50px] rounded-full" />
+          {/if}
+        </div>
+
+        <!-- Server uptime -->
+        <div class="flex h-12 flex-row items-center gap-4">
+          <Tooltip.Provider delayDuration={200}>
+            <Tooltip.Root>
+              <Tooltip.Trigger>
+                <ClockArrowUp class="size-8 text-muted-foreground" />
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                <p>Server Uptime</p>
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+          {#if serverStatistics}
+            <p class="font-mono font-medium text-foreground">
+              {formatUptime(serverStatistics.uptime)}
+            </p>
+          {:else}
+            <!-- Show skeleton loader -->
+            <Skeleton class="h-[15px] w-[100px] rounded-full" />
+          {/if}
+        </div>
+      </Card.Content>
+    </Card.Root>
   </div>
 </div>

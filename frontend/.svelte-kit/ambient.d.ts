@@ -36,6 +36,7 @@ declare module '$env/static/private' {
 	export const MYSQL_HOST: string;
 	export const GJS_DEBUG_TOPICS: string;
 	export const npm_package_devDependencies__types_node: string;
+	export const npm_package_devDependencies_sveltekit_superforms: string;
 	export const LC_TIME: string;
 	export const USER: string;
 	export const PHP_INI_SCAN_DIR: string;
@@ -53,6 +54,7 @@ declare module '$env/static/private' {
 	export const npm_package_devDependencies_vite: string;
 	export const npm_node_execpath: string;
 	export const SHLVL: string;
+	export const npm_package_devDependencies_formsnap: string;
 	export const HOME: string;
 	export const OLDPWD: string;
 	export const CHROME_DESKTOP: string;
@@ -90,10 +92,12 @@ declare module '$env/static/private' {
 	export const npm_package_devDependencies_typescript: string;
 	export const WAYLAND_DISPLAY: string;
 	export const FZF_CTRL_T_OPTS: string;
-	export const FNM_LOGLEVEL: string;
 	export const FNM_VERSION_FILE_STRATEGY: string;
+	export const FNM_LOGLEVEL: string;
 	export const npm_package_scripts_dev: string;
 	export const npm_package_devDependencies_prettier: string;
+	export const npm_package_devDependencies_zod: string;
+	export const npm_package_dependencies_runed: string;
 	export const LOGNAME: string;
 	export const npm_package_type: string;
 	export const _: string;
@@ -231,6 +235,7 @@ declare module '$env/dynamic/private' {
 		MYSQL_HOST: string;
 		GJS_DEBUG_TOPICS: string;
 		npm_package_devDependencies__types_node: string;
+		npm_package_devDependencies_sveltekit_superforms: string;
 		LC_TIME: string;
 		USER: string;
 		PHP_INI_SCAN_DIR: string;
@@ -248,6 +253,7 @@ declare module '$env/dynamic/private' {
 		npm_package_devDependencies_vite: string;
 		npm_node_execpath: string;
 		SHLVL: string;
+		npm_package_devDependencies_formsnap: string;
 		HOME: string;
 		OLDPWD: string;
 		CHROME_DESKTOP: string;
@@ -285,10 +291,12 @@ declare module '$env/dynamic/private' {
 		npm_package_devDependencies_typescript: string;
 		WAYLAND_DISPLAY: string;
 		FZF_CTRL_T_OPTS: string;
-		FNM_LOGLEVEL: string;
 		FNM_VERSION_FILE_STRATEGY: string;
+		FNM_LOGLEVEL: string;
 		npm_package_scripts_dev: string;
 		npm_package_devDependencies_prettier: string;
+		npm_package_devDependencies_zod: string;
+		npm_package_dependencies_runed: string;
 		LOGNAME: string;
 		npm_package_type: string;
 		_: string;

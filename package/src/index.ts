@@ -1,6 +1,6 @@
 import { type IncomingLog } from '@shared/types';
 
-type Config = { backendUrl: string; bufferSize?: number; serverName?: string };
+type Config = { backendUrl: string; bufferSize?: number; serverId: number };
 
 class Logger {
   #backendUrl: string;
@@ -8,7 +8,9 @@ class Logger {
   #bufferSize: number = 10; // Number of logs before sending
   #isFlushing: boolean = false; // Flag to indicate if a flush is in progress
   #queue: Array<IncomingLog> = []; // Queue to store logs while flushing
-  #serverName?: string; // Name of the server
+  #serverId: number; // Name of the server
+  #numberOfRetiesToFetch: number = 0;
+  static #MAX_RETRIES = 3;
   static #COLORS: Map<string, string> = new Map([
     ['red', '\x1b[31m'],
     ['green', '\x1b[32m'],
@@ -116,17 +118,11 @@ class Logger {
       this.#bufferSize = config.bufferSize;
     }
 
-    if (config.serverName) {
-      if (config.serverName.length > 255) {
-        throw new Error('serverName must be less than 256 characters');
-      }
-
-      this.#serverName = config.serverName;
-    }
+    this.#serverId = config.serverId;
   }
 
   #pushLog(log: IncomingLog) {
-    log.serverName = this.#serverName;
+    log.serverId = this.#serverId;
     this.#buffer.push(log);
     if (this.#buffer.length >= this.#bufferSize) {
       this.#flush();
@@ -134,7 +130,7 @@ class Logger {
   }
 
   async #sendLogImmediately(log: IncomingLog) {
-    log.serverName = this.#serverName;
+    log.serverId = this.#serverId;
     try {
       await fetch(this.#backendUrl + '/logs', {
         method: 'POST',
@@ -154,16 +150,32 @@ class Logger {
     try {
       while (this.#buffer.length > 0) {
         const logsToSend = this.#buffer.splice(0, this.#bufferSize);
-        await fetch(this.#backendUrl + '/logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(logsToSend)
-        });
+        try {
+          const res = await fetch(this.#backendUrl + '/logs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(logsToSend)
+          });
+
+          if (!res.ok) {
+            throw new Error(`Failed to send logs: ${res.statusText}`);
+          }
+        } catch (error) {
+          console.error('Failed to send logs:', error);
+          // Re-add unsent logs to the buffer
+          this.#buffer.push(...logsToSend);
+          break;
+        }
       }
     } catch (error) {
       console.error('Failed to send logs:', error);
-      // Re-add unsent logs to the queue
-      this.#queue.push(...this.#buffer);
+      // Re-add unsent logs to the queue if the maximum number of retries has not been reached
+      if (this.#numberOfRetiesToFetch < Logger.#MAX_RETRIES) {
+        this.#queue.push(...this.#buffer);
+        this.#numberOfRetiesToFetch++;
+      } else {
+        console.error('Failed to send logs after multiple retries');
+      }
     } finally {
       this.#isFlushing = false;
       // Process any logs that were added to the queue while flushing

@@ -5,11 +5,19 @@ export interface IncomingLog {
   message: string;
   timestamp: Date;
   source?: string;
-  serverName?: string;
+  serverId?: number;
 }
 
 export interface Log extends IncomingLog {
-  id: number;
+  logId: number;
+  logLevel: LogLevel;
+  logMessage: string;
+  logSource: string;
+  logTimestamp: Date;
+  serverId: number;
+  serverName: string;
+  serverDescription?: string;
+  serverUrl: string | null;
 }
 
 
@@ -20,6 +28,14 @@ export interface ServerStatistics {
   databaseSize: number; // in bytes
 }
 
+export interface Server {
+  id?: number;
+  description?: string;
+  name: string;
+  publicUrl?: string;
+  isOnline?: boolean;
+}
+
 
 // CONFIGS
 export interface BackendConfig {
@@ -28,6 +44,7 @@ export interface BackendConfig {
     prune_batch_size?: number;
     prune_interval?: number;
   },
+  allowedIps?: string[];
 }
 export interface FinalBackendConfig extends BackendConfig {
   database: {
@@ -35,4 +52,5 @@ export interface FinalBackendConfig extends BackendConfig {
     prune_batch_size: number;
     prune_interval: number;
   },
+  allowedIps: string[];
 }

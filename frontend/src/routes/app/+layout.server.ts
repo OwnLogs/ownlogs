@@ -1,6 +1,7 @@
 import type { LayoutServerLoad } from './$types';
+import { getAllServers } from '$lib/server/db/server';
 
-export const load = (async ({ locals }) => {
-  const { user, token } = locals;
-  return { user, token };
+export const load = (async () => {
+  const servers = await getAllServers();
+  return { servers };
 }) satisfies LayoutServerLoad;

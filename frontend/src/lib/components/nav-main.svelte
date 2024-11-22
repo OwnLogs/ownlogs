@@ -2,6 +2,8 @@
   import * as Collapsible from '$lib/components/ui/collapsible/index.js';
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
   import ChevronRight from 'lucide-svelte/icons/chevron-right';
+  import { page } from '$app/stores';
+  import { urlStartsWith } from '$lib/utils';
 
   let {
     items
@@ -12,7 +14,6 @@
       // This should be `Component` after lucide-svelte updates types
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       icon: any;
-      isActive?: boolean;
       items?: {
         title: string;
         url: string;
@@ -25,7 +26,7 @@
   <Sidebar.GroupLabel>Platform</Sidebar.GroupLabel>
   <Sidebar.Menu>
     {#each items as mainItem (mainItem.title)}
-      <Collapsible.Root open={mainItem.isActive}>
+      <Collapsible.Root open={urlStartsWith($page.url.pathname, mainItem.url)}>
         {#snippet child({ props })}
           <Sidebar.MenuItem {...props}>
             <Sidebar.MenuButton>

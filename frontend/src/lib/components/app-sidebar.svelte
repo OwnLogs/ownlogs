@@ -2,27 +2,38 @@
   import NavMain from '$lib/components/nav-main.svelte';
   import NavUser from '$lib/components/nav-user.svelte';
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-  import Command from 'lucide-svelte/icons/command';
-  import { Settings2 } from 'lucide-svelte';
+  import { Command } from 'lucide-svelte';
+  import { Settings2, Server as ServerIcon } from 'lucide-svelte';
+  import { type Server } from '@shared/types';
+  import { page } from '$app/stores';
 
-  let { ref = $bindable(null), user, ...restProps } = $props();
+  let { ref = $bindable(null), user, servers, ...restProps } = $props();
 
   const data = {
     navMain: [
       {
         title: 'Logs',
-        url: '/app',
+        url: '/app/logs',
         icon: Settings2,
         items: [
           {
             title: 'Overview',
-            url: '/app'
+            url: '/app/logs'
           },
           {
-            title: 'All',
-            url: '/app/logs'
+            title: 'Details',
+            url: '/app/logs/details'
           }
         ]
+      },
+      {
+        title: 'Servers',
+        icon: ServerIcon,
+        url: '/app/servers',
+        items: servers.map((server: Server) => ({
+          title: server.name,
+          url: `/app/servers/${server.id}`
+        }))
       }
     ]
   };
@@ -34,7 +45,7 @@
       <Sidebar.MenuItem>
         <Sidebar.MenuButton size="lg">
           {#snippet child({ props })}
-            <a href="/app" {...props}>
+            <a href="/app/logs" {...props}>
               <div
                 class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
               >

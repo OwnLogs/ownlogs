@@ -20,3 +20,12 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
     i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
 }
+
+export function urlStartsWith(url: string, path: string | string[]): boolean {
+  if (!url || !path) return false;
+  if (path instanceof Array) return path.some((p) => urlStartsWith(url, p));
+  // For the `/` path
+  if (path.length === 1) return url.at(-1) === path;
+
+  return url.startsWith(path);
+}
