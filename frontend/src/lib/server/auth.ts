@@ -12,8 +12,13 @@ async function auth(token: string): Promise<User | null> {
       jwt.verify(token, JWT_SECRET, async (err, decoded: unknown) => {
         if (err) return reject({ error: err });
         try {
-          const user = await findUserByUsername(decoded as string);
-          resolve(user);
+          const users = await findUserByUsername(decoded as string);
+          if (!users || users.length === 0) reject({ error: 'User not found' });
+          if (users && users.length > 0) {
+            resolve(users[0]);
+          } else {
+            reject({ error: 'User not found' });
+          }
         } catch (error) {
           console.error('Error finding user:', error);
           reject({ error: 'User not found' });

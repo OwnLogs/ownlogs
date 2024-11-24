@@ -14,9 +14,11 @@ import { deletedServer } from './routes/post/deletedServer';
 import { createdServer } from './routes/post/createdServer';
 import { logs } from './routes/ws/logs';
 import { logsOverview } from './routes/ws/logsOverview';
+import { getBackendConfig } from '../../shared/configs';
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
+const config = getBackendConfig();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -28,6 +30,8 @@ const router = express.Router();
 
 export class knownServerIdsCache {
   static knownServerIdsCacheValues: number[];
+  static lastChecked: Date = new Date();
+  static MAX_CACHE_TIME = config.cachingTime;
 
   static remove(id: number) {
     knownServerIdsCache.knownServerIdsCacheValues =
@@ -48,6 +52,27 @@ export class knownServerIdsCache {
 
   static get() {
     return knownServerIdsCache.knownServerIdsCacheValues;
+  }
+
+  static clear() {
+    knownServerIdsCache.knownServerIdsCacheValues = [];
+  }
+
+  static async pruneCache() {
+    if (
+      knownServerIdsCache.lastChecked.getTime() + knownServerIdsCache.MAX_CACHE_TIME <
+      Date.now()
+    ) {
+      knownServerIdsCache.clear();
+      await knownServerIdsCache.#updateCache();
+      knownServerIdsCache.lastChecked = new Date();
+    }
+  }
+
+  static async #updateCache() {
+    const actualIds = await LogDAO.getKnownServerIds();
+    knownServerIdsCache.clear();
+    knownServerIdsCache.set(actualIds);
   }
 }
 
@@ -73,5 +98,8 @@ startMonitoring();
 app.listen(port, async () => {
   // Settings initial known server ids
   knownServerIdsCache.set(await LogDAO.getKnownServerIds());
+  // Prune cache every MAX_CACHE_TIME
+  setInterval(knownServerIdsCache.pruneCache, knownServerIdsCache.MAX_CACHE_TIME);
+
   Logger.info(`[server]: Server is running at http://localhost:${port}`);
 });

@@ -41,7 +41,8 @@ const defaultBackendConfig: FinalBackendConfig = {
   },
   allowedIps: [
     '::ffff:127.0.0.1', // IPv4 localhost
-  ]
+  ],
+  cachingTime: 1000 * 60, // 1 minute
 };
 
 export const getBackendConfig = (): FinalBackendConfig => {

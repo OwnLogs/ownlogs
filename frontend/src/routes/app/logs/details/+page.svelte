@@ -347,7 +347,9 @@
 
         <!-- Current page index / Total pages -->
         <span class="text-sm font-semibold">
-          Page {logs.page + 1} of {Math.ceil(logs.totalLogs / logs.pageSize)}
+          Page {logs.page + 1} of {Math.ceil(logs.totalLogs / logs.pageSize) === 0
+            ? 1
+            : Math.ceil(logs.totalLogs / logs.pageSize)}
         </span>
 
         <!-- Pagination buttons -->
@@ -364,7 +366,9 @@
             variant="outline"
             class="aspect-square size-8 p-1"
             onclick={nextPage}
-            disabled={logs.page === Math.ceil(logs.totalLogs / logs.pageSize) - 1}
+            disabled={Math.ceil(logs.totalLogs / logs.pageSize) === 0
+              ? true
+              : logs.page === Math.ceil(logs.totalLogs / logs.pageSize) - 1}
           >
             <ChevronRight class="size-full" />
           </Button>

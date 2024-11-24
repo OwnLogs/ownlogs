@@ -1,22 +1,25 @@
 <script lang="ts">
-  import ServiceStatus from '$lib/components/ServiceStatus.svelte';
-  import * as Card from '$lib/components/ui/card';
+  import type { Server } from '@shared/types';
   import { pageMetadata } from '$lib/stores';
-  import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+  import { enhance } from '$app/forms';
+  import { cn } from '$lib/utils';
+  import { toast } from 'svelte-sonner';
+  import { EllipsisVertical, Trash2, Pencil } from 'lucide-svelte';
+  import { MediaQuery } from 'runed';
+  import ServiceStatus from '$lib/components/ServiceStatus.svelte';
+  import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
+  import * as Card from '$lib/components/ui/card';
+  import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
-  import { toast } from 'svelte-sonner';
-  import { enhance } from '$app/forms';
-  import { EllipsisVertical, Trash2, Pencil } from 'lucide-svelte';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import type { Server } from '@shared/types';
   import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-  import { cn } from '$lib/utils';
+  import * as Sheet from '$lib/components/ui/sheet/index.js';
+  import * as Drawer from '$lib/components/ui/drawer/index.js';
 
   const { data, form } = $props();
   const { server } = data;
+  const isDesktop = new MediaQuery('(min-width: 768px)');
 
   let deleteServerModalOpen: boolean = $state(false);
   let deleteServerNameConfirmValue: string = $state('');
@@ -39,61 +42,128 @@
       deleteServerModalOpen = false;
       editServerModalOpen = false;
     }
+
+    // Reset form state to prevent infinite reactivity due to updating parent variables in here
+    if (form?.success) form.success = false;
+    if (form?.error) form.error = false;
   });
 </script>
 
-<!-- Edit server modal -->
-<Dialog.Root bind:open={editServerModalOpen}>
-  <Dialog.Content>
-    <Dialog.Header>
-      <Dialog.Title>Edit server</Dialog.Title>
-    </Dialog.Header>
-    <form
-      action="?/editServer"
-      method="POST"
-      class="grid gap-4"
-      use:enhance={() => {
-        isDeletingServer = true;
-        return async ({ update }) => {
-          isDeletingServer = false;
-          update();
-        };
-      }}
-    >
-      <div class="flex flex-col gap-2">
-        <Label for="deleteServerNameInput">Name</Label>
-        <Input
-          id="deleteServerNameInput"
-          name="deleteServerNameInput"
-          bind:value={editServerNewServer.name}
-        />
-      </div>
-      <div class="flex flex-col">
-        <Label for="deleteServerDescriptionInput">Description</Label>
-        <Input
-          id="deleteServerDescriptionInput"
-          name="deleteServerDescriptionInput"
-          class="mt-2"
-          bind:value={editServerNewServer.description}
-        />
-        <p class="text-sm text-muted-foreground">(Optional)</p>
-      </div>
-      <div class="flex flex-col">
-        <Label for="deleteServerPublicUrlInput">Public URL</Label>
-        <Input
-          id="deleteServerPublicUrlInput"
-          name="deleteServerPublicUrlInput"
-          class="mt-2"
-          bind:value={editServerNewServer.publicUrl}
-        />
-        <p class="text-sm text-muted-foreground">(Optional): Used for uptime monitoring.</p>
-      </div>
-      <Dialog.Footer>
+<!-- Edit servers modal -->
+{#if isDesktop.matches}
+  <!-- On desktop -->
+  <Sheet.Root bind:open={editServerModalOpen}>
+    <Sheet.Content class="w-full sm:max-w-2xl">
+      <Sheet.Header>
+        <Sheet.Title>Edit server</Sheet.Title>
+      </Sheet.Header>
+
+      <form
+        action="?/editServer"
+        method="POST"
+        class="mt-4 grid gap-4"
+        use:enhance={() => {
+          isDeletingServer = true;
+          return async ({ update }) => {
+            isDeletingServer = false;
+            update();
+          };
+        }}
+      >
+        <div class="flex flex-col gap-2">
+          <Label for="deleteServerNameInput">Name</Label>
+          <Input
+            id="deleteServerNameInput"
+            name="deleteServerNameInput"
+            bind:value={editServerNewServer.name}
+          />
+        </div>
+        <div class="flex flex-col">
+          <Label for="deleteServerDescriptionInput">Description</Label>
+          <Input
+            id="deleteServerDescriptionInput"
+            name="deleteServerDescriptionInput"
+            class="mt-2"
+            bind:value={editServerNewServer.description}
+          />
+          <p class="text-sm text-muted-foreground">(Optional)</p>
+        </div>
+        <div class="flex flex-col">
+          <Label for="deleteServerPublicUrlInput">Public URL</Label>
+          <Input
+            id="deleteServerPublicUrlInput"
+            name="deleteServerPublicUrlInput"
+            class="mt-2"
+            bind:value={editServerNewServer.publicUrl}
+          />
+          <p class="text-sm text-muted-foreground">(Optional): Used for uptime monitoring.</p>
+        </div>
+
         <Button type="submit" disabled={isEditingServer} loading={isEditingServer}>Save</Button>
-      </Dialog.Footer>
-    </form>
-  </Dialog.Content>
-</Dialog.Root>
+      </form>
+    </Sheet.Content>
+  </Sheet.Root>
+{:else}
+  <!-- On mobile -->
+  <Drawer.Root bind:open={editServerModalOpen}>
+    <Drawer.Content>
+      <form
+        action="?/editServer"
+        method="POST"
+        class="mx-auto w-full max-w-screen-md"
+        use:enhance={() => {
+          isDeletingServer = true;
+          return async ({ update }) => {
+            isDeletingServer = false;
+            update();
+          };
+        }}
+      >
+        <Drawer.Header>
+          <Drawer.Title>Edit server</Drawer.Title>
+        </Drawer.Header>
+
+        <div class="grid gap-4 px-4">
+          <div class="flex flex-col gap-2">
+            <Label for="deleteServerNameInput">Name</Label>
+            <Input
+              id="deleteServerNameInput"
+              name="deleteServerNameInput"
+              bind:value={editServerNewServer.name}
+            />
+          </div>
+          <div class="flex flex-col">
+            <Label for="deleteServerDescriptionInput">Description</Label>
+            <Input
+              id="deleteServerDescriptionInput"
+              name="deleteServerDescriptionInput"
+              class="mt-2"
+              bind:value={editServerNewServer.description}
+            />
+            <p class="text-sm text-muted-foreground">(Optional)</p>
+          </div>
+          <div class="flex flex-col">
+            <Label for="deleteServerPublicUrlInput">Public URL</Label>
+            <Input
+              id="deleteServerPublicUrlInput"
+              name="deleteServerPublicUrlInput"
+              class="mt-2"
+              bind:value={editServerNewServer.publicUrl}
+            />
+            <p class="text-sm text-muted-foreground">(Optional): Used for uptime monitoring.</p>
+          </div>
+        </div>
+
+        <Drawer.Footer>
+          <Button type="submit" disabled={isEditingServer} loading={isEditingServer}>Save</Button>
+          <Drawer.Close type="button" class={buttonVariants({ variant: 'outline' })}
+            >Close</Drawer.Close
+          >
+        </Drawer.Footer>
+      </form>
+    </Drawer.Content>
+  </Drawer.Root>
+{/if}
 
 <!-- Delete server modal -->
 <AlertDialog.Root bind:open={deleteServerModalOpen}>
@@ -160,7 +230,11 @@
                       <Pencil class="mr-2 size-4" />
                       <span>Edit</span>
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item onclick={() => (deleteServerModalOpen = true)}>
+                    <!-- Disable the delete button on the logs server -->
+                    <DropdownMenu.Item
+                      disabled={server.id === 1}
+                      onclick={() => (deleteServerModalOpen = true)}
+                    >
                       <Trash2 class="mr-2 size-4 text-red-600" />
                       <span>Delete</span>
                     </DropdownMenu.Item>

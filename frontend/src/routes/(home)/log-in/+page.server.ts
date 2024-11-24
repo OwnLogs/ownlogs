@@ -17,12 +17,13 @@ export const actions: Actions = {
     if (!password) return fail(400, { error: 'Please enter a password!' });
 
     try {
-      const user = await findUserByUsername(username);
+      const users = await findUserByUsername(username);
 
       // If user does not exist, return error
-      if (!user) return fail(400, { error: 'No account with this username!' });
+      if (!users || users?.length === 0)
+        return fail(400, { error: 'No account with this username!' });
 
-      const compare = bcrypt.compareSync(password, user.passwordHash);
+      const compare = bcrypt.compareSync(password, users[0].passwordHash);
 
       // If password is incorrect, return error
       if (!compare) return fail(400, { error: 'Incorrect password!' });

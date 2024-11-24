@@ -53,4 +53,5 @@ export interface FinalBackendConfig extends BackendConfig {
     prune_interval: number;
   },
   allowedIps: string[];
+  cachingTime: number;
 }

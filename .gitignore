@@ -3,7 +3,7 @@ node_modules
 # Output
 .output/
 .vercel/
-frontend/.svelte-kit
+frontend/.svelte-kit/
 build/
 dist/
 

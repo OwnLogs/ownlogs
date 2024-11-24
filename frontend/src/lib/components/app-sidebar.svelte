@@ -5,7 +5,6 @@
   import { Command } from 'lucide-svelte';
   import { Settings2, Server as ServerIcon } from 'lucide-svelte';
   import { type Server } from '@shared/types';
-  import { page } from '$app/stores';
 
   let { ref = $bindable(null), user, servers, ...restProps } = $props();
 

@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import { generateAccessToken } from '$lib/server/auth';
 import { fail } from '@sveltejs/kit';
 import bcrypt from 'bcryptjs';
-import { usernameIsTaken, createNewUser, hasAUserRegistered } from '$lib/server/db/user';
+import { usernameIsTaken, createNewUser } from '$lib/server/db/user';
 
 export const actions: Actions = {
   async register({ cookies, request }) {
@@ -50,25 +50,16 @@ export const actions: Actions = {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
 
-    const hasARegisteredUser = await hasAUserRegistered();
-
     // Create user
-    await createNewUser(username, hash);
+    await createNewUser(username, hash, 'owner');
 
-    if (hasARegisteredUser) {
-      return {
-        success: true,
-        message: 'User created successfully!'
-      };
-    } else {
-      // Set token
-      cookies.set('token', generateAccessToken(username), {
-        path: '/',
-        maxAge: 60 * 60 * 24,
-        secure: false
-      });
+    // Set token
+    cookies.set('token', generateAccessToken(username), {
+      path: '/',
+      maxAge: 60 * 60 * 24,
+      secure: false
+    });
 
-      throw redirect(303, '/app/logs');
-    }
+    throw redirect(303, '/app/logs');
   }
 };

@@ -8,6 +8,17 @@ import {
 } from '$lib/server/db/user';
 import { generateAccessToken } from '$lib/server/auth';
 import bcrypt from 'bcryptjs';
+import type { PageServerLoad } from './$types';
+import { getAllUsers, deleteUser, updateUser } from '$lib/server/db/user';
+import type { User } from '$lib/server/db/user';
+
+export const load = (async () => {
+  const allUsers = await getAllUsers();
+
+  return {
+    allUsers
+  };
+}) satisfies PageServerLoad;
 
 export const actions: Actions = {
   async updateUsername({ request, cookies, locals }) {
@@ -132,9 +143,10 @@ export const actions: Actions = {
   },
   async createGuestAccount({ request }) {
     const formData = Object.fromEntries(await request.formData());
-    const { username, password } = formData as {
+    const { username, password, role } = formData as {
       username: string;
       password: string;
+      role: string;
     };
 
     // Check if username is already used
@@ -174,17 +186,141 @@ export const actions: Actions = {
         action: 'createGuestAccount'
       });
 
+    // Validate role
+    if (!role)
+      return fail(400, {
+        error: true,
+        message: 'Please select a role!',
+        action: 'createGuestAccount'
+      });
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
 
     // Create user
-    await createNewUser(username, hash);
+    const { insertId } = await createNewUser(username, hash, role);
+
+    const newUser = {
+      username,
+      role,
+      id: insertId
+    };
 
     return {
       success: true,
       message: 'User created successfully!',
-      action: 'createGuestAccount'
+      action: 'createGuestAccount',
+      newUser
     };
+  },
+  async deleteUserAccount({ request, locals }) {
+    const formData = Object.fromEntries(await request.formData());
+    const userId = parseInt(formData?.userId as string);
+
+    if (!locals.user) {
+      return fail(401, {
+        error: true,
+        message: 'You must be logged in to delete a user!',
+        action: 'deleteUserAccount'
+      });
+    }
+
+    if (!userId) {
+      return fail(400, {
+        error: true,
+        message: 'Please provide a user ID!',
+        action: 'deleteUserAccount'
+      });
+    }
+
+    if (locals.user.id === userId) {
+      return fail(400, {
+        error: true,
+        message: 'You cannot delete your own account!',
+        action: 'deleteUserAccount'
+      });
+    }
+
+    try {
+      // Delete user
+      await deleteUser(userId);
+
+      return {
+        success: true,
+        message: 'User deleted successfully!',
+        action: 'deleteUserAccount'
+      };
+    } catch (error) {
+      console.error(error);
+      return fail(400, { error: true, message: 'An error occurred!', action: 'deleteUserAccount' });
+    }
+  },
+  async editUserAccount({ request, locals }) {
+    const formData = Object.fromEntries(await request.formData());
+
+    const { userId, username, role } = formData as {
+      userId: string;
+      username: string;
+      role: string;
+    };
+
+    if (!locals.user) {
+      return fail(401, {
+        error: true,
+        message: 'You must be logged in to edit a user!',
+        action: 'editUserAccount'
+      });
+    }
+
+    if (!userId) {
+      return fail(400, {
+        error: true,
+        message: 'Please provide a user ID!',
+        action: 'editUserAccount'
+      });
+    }
+
+    if (!username) {
+      return fail(400, {
+        error: true,
+        message: 'Please provide a username!',
+        action: 'editUserAccount'
+      });
+    }
+
+    if (!role) {
+      return fail(400, {
+        error: true,
+        message: 'Please provide a role!',
+        action: 'editUserAccount'
+      });
+    }
+
+    // Edit user
+    try {
+      await updateUser(parseInt(userId), { username, role } as {
+        username: string;
+        role: User['role'];
+      });
+
+      return {
+        success: true,
+        message: 'User edited successfully!',
+        action: 'editUserAccount',
+        updatedUser: {
+          id: parseInt(userId),
+          username,
+          role
+        }
+      };
+    } catch (error) {
+      console.error(error);
+      return fail(400, {
+        error: true,
+        message: error as string,
+        action: 'editUserAccount'
+      });
+    }
   }
 };

@@ -1,13 +1,20 @@
 <script lang="ts">
-  import Button from '$lib/components/ui/button/button.svelte';
-  import * as Card from '$lib/components/ui/card';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import type { User } from '$lib/server/db/user.js';
   import { toast } from 'svelte-sonner';
   import { pageMetadata } from '$lib/stores';
   import { enhance } from '$app/forms';
+  import { buttonVariants } from '$lib/components/ui/button/index.js';
+  import { MediaQuery } from 'runed';
+  import { Input } from '$lib/components/ui/input/index.js';
+  import { Label } from '$lib/components/ui/label/index.js';
+  import Button from '$lib/components/ui/button/button.svelte';
   import Separator from '$lib/components/ui/separator/separator.svelte';
+  import * as Card from '$lib/components/ui/card';
   import * as Tabs from '$lib/components/ui/tabs/index.js';
+  import * as Select from '$lib/components/ui/select/index.js';
+  import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+  import * as Sheet from '$lib/components/ui/sheet/index.js';
+  import * as Drawer from '$lib/components/ui/drawer/index.js';
 
   pageMetadata.set({
     title: 'Settings',
@@ -16,6 +23,8 @@
   });
 
   const { data, form } = $props();
+  const isDesktop = new MediaQuery('(min-width: 768px)');
+  let allUsers = $state(data.allUsers);
   let user = $state(data.user);
   let isUpdatingUsername: boolean = $state(false);
   let isUpdatingPassword: boolean = $state(false);
@@ -23,6 +32,16 @@
   let currentPasswordInputValue: string = $state('');
   let newPasswordInputValue: string = $state('');
   let isCreatingGuestAccount: boolean = $state(false);
+  let deleteAccountModalConfirm: { visible: boolean; user: User | null } = $state({
+    visible: false,
+    user: null
+  });
+  let isDeleingUserAccount: boolean = $state(false);
+  let editUserModal: { visible: boolean; user: User | null } = $state({
+    visible: false,
+    user: null
+  });
+  let isSavingUserAccount: boolean = $state(false);
 
   $effect(() => {
     if (form?.success) {
@@ -35,12 +54,179 @@
           currentPasswordInputValue = '';
           newPasswordInputValue = '';
           break;
+        case 'createGuestAccount':
+          allUsers.push(form.newUser as User);
+          break;
+        case 'deleteUserAccount':
+          allUsers.splice(
+            allUsers.findIndex((u) => u.id === deleteAccountModalConfirm?.user?.id),
+            1
+          );
+          deleteAccountModalConfirm = { visible: false, user: null };
+          break;
+        case 'editUserAccount':
+          if (editUserModal?.user) {
+            const userIndex = allUsers.findIndex((u) => u.id === editUserModal.user?.id);
+            if (userIndex === -1) return;
+            if (!form.updatedUser) return;
+            allUsers[userIndex].username = form.updatedUser?.username;
+            allUsers[userIndex].role = form.updatedUser?.role as User['role'];
+            editUserModal = { visible: false, user: null };
+          }
+          break;
       }
     } else if (form?.error) {
       toast.error(form.message);
     }
+
+    // Reset form state to prevent infinite reactivity due to updating parent variables in here
+    if (form?.success) form.success = false;
+    if (form?.error) form.error = false;
   });
 </script>
+
+<!-- Confirm user account deletion modal -->
+<AlertDialog.Root bind:open={deleteAccountModalConfirm.visible}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Confirm account deletion</AlertDialog.Title>
+      <AlertDialog.Description>
+        This action cannot be undone. This will permanently delete {deleteAccountModalConfirm.user
+          ?.username}'s account.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <form
+        action="?/deleteUserAccount"
+        class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
+        method="POST"
+        use:enhance={(e) => {
+          e.formData.append('userId', deleteAccountModalConfirm.user?.id?.toString() || '');
+          isDeleingUserAccount = true;
+          return async ({ update }) => {
+            isDeleingUserAccount = false;
+            update();
+          };
+        }}
+      >
+        <AlertDialog.Cancel type="button">Cancel</AlertDialog.Cancel>
+        <Button disabled={isDeleingUserAccount} loading={isDeleingUserAccount} type="submit"
+          >Continue</Button
+        >
+      </form>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
+
+<!-- Edit user modal -->
+{#if editUserModal?.user}
+  {#if isDesktop.matches}
+    <!-- On desktop -->
+    <Sheet.Root bind:open={editUserModal.visible}>
+      <Sheet.Content class="w-full sm:max-w-2xl">
+        <Sheet.Header>
+          <Sheet.Title>Edit user</Sheet.Title>
+        </Sheet.Header>
+
+        <form
+          action="?/editUserAccount"
+          method="POST"
+          class="space-y-4"
+          use:enhance={(e) => {
+            e.formData.append('userId', editUserModal.user?.id?.toString() || '');
+            isSavingUserAccount = true;
+            return async ({ update }) => {
+              isSavingUserAccount = false;
+              update();
+            };
+          }}
+        >
+          <div class="flex flex-col gap-1">
+            <Label for="username">Username</Label>
+            <Input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Username"
+              value={editUserModal.user.username}
+            />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <Label for="role">Role</Label>
+            <Select.Root type="single" name="role" value={editUserModal.user.role}>
+              <Select.Trigger>{editUserModal.user.role}</Select.Trigger>
+              <Select.Content>
+                <Select.Item value="guest">Guest</Select.Item>
+                <Select.Item value="admin">Admin</Select.Item>
+              </Select.Content>
+            </Select.Root>
+          </div>
+
+          <Button type="submit" disabled={isSavingUserAccount} loading={isSavingUserAccount}
+            >Save</Button
+          >
+        </form>
+      </Sheet.Content>
+    </Sheet.Root>
+  {:else}
+    <!-- On mobile -->
+    <Drawer.Root bind:open={editUserModal.visible}>
+      <Drawer.Content>
+        <form
+          action="?/editUserAccount"
+          method="POST"
+          class="mx-auto w-full max-w-screen-md"
+          use:enhance={(e) => {
+            e.formData.append('userId', editUserModal.user?.id?.toString() || '');
+            isSavingUserAccount = true;
+            return async ({ update }) => {
+              isSavingUserAccount = false;
+              update();
+            };
+          }}
+        >
+          <Drawer.Header>
+            <Drawer.Title>Edit user</Drawer.Title>
+          </Drawer.Header>
+
+          <div class="space-y-4 px-4">
+            <div class="flex flex-col gap-1">
+              <Label for="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Username"
+                value={editUserModal.user.username}
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <Label for="role">Role</Label>
+              <Select.Root type="single" name="role" value={editUserModal.user.role}>
+                <Select.Trigger>{editUserModal.user.role}</Select.Trigger>
+                <Select.Content>
+                  <Select.Item value="guest">Guest</Select.Item>
+                  <Select.Item value="admin">Admin</Select.Item>
+                </Select.Content>
+              </Select.Root>
+            </div>
+          </div>
+
+          <Drawer.Footer>
+            <Button type="submit" disabled={isSavingUserAccount} loading={isSavingUserAccount}
+              >Save</Button
+            >
+            <Drawer.Close type="button" class={buttonVariants({ variant: 'outline' })}
+              >Close</Drawer.Close
+            >
+          </Drawer.Footer>
+        </form>
+      </Drawer.Content>
+    </Drawer.Root>
+  {/if}
+{/if}
 
 <div class="mx-auto flex max-w-screen-md flex-col gap-4 p-4 md:gap-8 md:p-8">
   <Tabs.Root value="account">
@@ -145,6 +331,7 @@
     </Tabs.Content>
     <!-- Create guest accounts panel -->
     <Tabs.Content value="guestAccounts">
+      <!-- Create a guest account -->
       <Card.Root>
         <Card.Header>
           <Card.Title>Create an account</Card.Title>
@@ -165,7 +352,7 @@
                 };
               }}
             >
-              <div class="grid gap-2">
+              <div class="grid gap-4">
                 <div class="grid gap-1">
                   <Label class="sr-only" for="username">Username</Label>
                   <Input
@@ -190,6 +377,16 @@
                     autocorrect="off"
                   />
                 </div>
+                <div class="grid gap-1">
+                  <Label class="sr-only" for="role">Role</Label>
+                  <Select.Root type="single" name="role">
+                    <Select.Trigger>Role</Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="guest">Guest</Select.Item>
+                      <Select.Item value="admin">Admin</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                </div>
                 <Button
                   type="submit"
                   loading={isCreatingGuestAccount}
@@ -197,6 +394,56 @@
                 >
               </div>
             </form>
+          </div>
+        </Card.Content>
+      </Card.Root>
+
+      <!-- Guests accounts managent -->
+      <Card.Root class="mt-8">
+        <Card.Header>
+          <Card.Title>Guest accounts</Card.Title>
+          <Card.Description
+            >All of the accounts that have access to the Logify service dashboard.</Card.Description
+          >
+        </Card.Header>
+        <Card.Content class="space-y-8">
+          <div class="flex flex-col gap-4">
+            {#if allUsers.length === 0}
+              <p class="font-medium text-muted-foreground">
+                No guest accounts have been created yet.
+              </p>
+            {:else}
+              <div class="grid gap-4 md:grid-cols-2">
+                {#each allUsers as u}
+                  {@const isOwner = user?.id === u.id}
+                  <!-- If the displayed user is the owner -->
+                  <Card.Root>
+                    <Card.Header>
+                      <Card.Title>{u.username} {isOwner ? '(You)' : ''}</Card.Title>
+                      <Card.Description>{u.role}</Card.Description>
+                    </Card.Header>
+
+                    <Card.Content>
+                      {#if !isOwner}
+                        <div class="grid grid-cols-2 gap-4">
+                          <Button
+                            onclick={() => {
+                              if (user) editUserModal = { visible: true, user: u };
+                            }}>Edit</Button
+                          >
+                          <Button
+                            variant="destructive"
+                            onclick={() => {
+                              if (user) deleteAccountModalConfirm = { visible: true, user: u };
+                            }}>Delete</Button
+                          >
+                        </div>
+                      {/if}
+                    </Card.Content>
+                  </Card.Root>
+                {/each}
+              </div>
+            {/if}
           </div>
         </Card.Content>
       </Card.Root>

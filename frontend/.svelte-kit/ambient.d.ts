@@ -92,8 +92,8 @@ declare module '$env/static/private' {
 	export const npm_package_devDependencies_typescript: string;
 	export const WAYLAND_DISPLAY: string;
 	export const FZF_CTRL_T_OPTS: string;
-	export const FNM_VERSION_FILE_STRATEGY: string;
 	export const FNM_LOGLEVEL: string;
+	export const FNM_VERSION_FILE_STRATEGY: string;
 	export const npm_package_scripts_dev: string;
 	export const npm_package_devDependencies_prettier: string;
 	export const npm_package_devDependencies_zod: string;
@@ -180,6 +180,7 @@ declare module '$env/static/private' {
 	export const VIRTUAL_ENV_DISABLE_PROMPT: string;
 	export const LC_NUMERIC: string;
 	export const STARSHIP_SESSION_KEY: string;
+	export const npm_package_devDependencies__sveltejs_enhanced_img: string;
 	export const npm_command: string;
 	export const PNPM_SCRIPT_SRC_DIR: string;
 	export const LC_PAPER: string;
@@ -193,6 +194,7 @@ declare module '$env/static/private' {
 	export const npm_package_dependencies__tanstack_table_core: string;
 	export const INIT_CWD: string;
 	export const NODE_ENV: string;
+	export const VIPSHOME: string;
 }
 
 /**
@@ -291,8 +293,8 @@ declare module '$env/dynamic/private' {
 		npm_package_devDependencies_typescript: string;
 		WAYLAND_DISPLAY: string;
 		FZF_CTRL_T_OPTS: string;
-		FNM_VERSION_FILE_STRATEGY: string;
 		FNM_LOGLEVEL: string;
+		FNM_VERSION_FILE_STRATEGY: string;
 		npm_package_scripts_dev: string;
 		npm_package_devDependencies_prettier: string;
 		npm_package_devDependencies_zod: string;
@@ -379,6 +381,7 @@ declare module '$env/dynamic/private' {
 		VIRTUAL_ENV_DISABLE_PROMPT: string;
 		LC_NUMERIC: string;
 		STARSHIP_SESSION_KEY: string;
+		npm_package_devDependencies__sveltejs_enhanced_img: string;
 		npm_command: string;
 		PNPM_SCRIPT_SRC_DIR: string;
 		LC_PAPER: string;
@@ -392,6 +395,7 @@ declare module '$env/dynamic/private' {
 		npm_package_dependencies__tanstack_table_core: string;
 		INIT_CWD: string;
 		NODE_ENV: string;
+		VIPSHOME: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

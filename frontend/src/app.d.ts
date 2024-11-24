@@ -1,4 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
+
+import type { User } from '$lib/server/db/user';
+
 // for information about these interfaces
 declare global {
   namespace App {
@@ -10,11 +13,7 @@ declare global {
     interface Locals {
       // Add your custom properties here
 
-      user?: {
-        id: number;
-        username: string;
-        passwordHash: string;
-      };
+      user?: User;
 
       token?: string;
 
