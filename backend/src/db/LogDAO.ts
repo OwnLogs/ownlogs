@@ -1,11 +1,23 @@
 import DB from '.';
 import { format } from 'date-fns';
 import { IncomingLog, type Log, type LogLevel } from '@shared/types';
+import { sendEmail } from '../SMTP';
+import UserDAO from './UserDAO';
 
 class LogDAO {
   async insertLogs(logs: Log[]): Promise<Log[]> {
     const newLogs: Log[] = [];
+    const usersToEmail: string[] = await UserDAO.getUsersToEmail(logs[0].serverId);
     for (const log of logs) {
+      if (log.level === 'fatal' || log.level === 'error') {
+        for (const email of usersToEmail) {
+          await sendEmail(
+            email,
+            `Critical Log Alert: ${log.level}`,
+            `Log message: ${log.message}\nTimestamp: ${log.timestamp}`
+          );
+        }
+      }
       const newLog = await this.insertLog(log);
       newLogs.push(newLog);
     }

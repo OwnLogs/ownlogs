@@ -21,7 +21,7 @@ To run the project, just run `./run.sh`.
  - [x] Add account settings
  - [x] Make an error page
  - [ ] Write a privacy policy
- - [ ] Write terms os services
+ - [ ] Write terms of services
  - [x] Add realtime toggle
  - [ ] Add comments to code
  - [x] Add dark/light mode toggle in user dropdown
@@ -30,8 +30,10 @@ To run the project, just run `./run.sh`.
  - [x] Add guest account management (Listing and deletion)
  - [ ] Make graphs of received logs
  - [ ] Make a logo
+ - [x] Add email alerts
  - [ ] Server surveillance
    - [ ] Add periodic server check and insert status in a new table to then display analytics
+   - [ ] Add ability to change start and end dates to server graphs
    - [x] Add editing to the server on the frontend
    - [x] Add deletion of a server
    - [x] Make a servers list page

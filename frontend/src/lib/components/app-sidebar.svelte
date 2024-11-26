@@ -3,7 +3,7 @@
   import NavUser from '$lib/components/nav-user.svelte';
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
   import { Command } from 'lucide-svelte';
-  import { Settings2, Server as ServerIcon } from 'lucide-svelte';
+  import { ChartArea, Server as ServerIcon } from 'lucide-svelte';
   import { type Server } from '@shared/types';
 
   let { ref = $bindable(null), user, servers, ...restProps } = $props();
@@ -13,7 +13,7 @@
       {
         title: 'Logs',
         url: '/app/logs',
-        icon: Settings2,
+        icon: ChartArea,
         items: [
           {
             title: 'Overview',

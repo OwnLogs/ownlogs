@@ -29,3 +29,7 @@ export function urlStartsWith(url: string, path: string | string[]): boolean {
 
   return url.startsWith(path);
 }
+
+export const isEmailValid = (email: string): boolean => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}

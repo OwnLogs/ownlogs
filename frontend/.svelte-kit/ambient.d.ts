@@ -37,6 +37,7 @@ declare module '$env/static/private' {
 	export const GJS_DEBUG_TOPICS: string;
 	export const npm_package_devDependencies__types_node: string;
 	export const npm_package_devDependencies_sveltekit_superforms: string;
+	export const npm_package_dependencies_apexcharts: string;
 	export const LC_TIME: string;
 	export const USER: string;
 	export const PHP_INI_SCAN_DIR: string;
@@ -83,6 +84,7 @@ declare module '$env/static/private' {
 	export const SYSTEMD_EXEC_PID: string;
 	export const npm_package_devDependencies_mode_watcher: string;
 	export const npm_package_dependencies__types_jsonwebtoken: string;
+	export const npm_package_dependencies_moment: string;
 	export const npm_config_engine_strict: string;
 	export const GIO_LAUNCHED_DESKTOP_FILE_PID: string;
 	export const COLORTERM: string;
@@ -92,8 +94,8 @@ declare module '$env/static/private' {
 	export const npm_package_devDependencies_typescript: string;
 	export const WAYLAND_DISPLAY: string;
 	export const FZF_CTRL_T_OPTS: string;
-	export const FNM_LOGLEVEL: string;
 	export const FNM_VERSION_FILE_STRATEGY: string;
+	export const FNM_LOGLEVEL: string;
 	export const npm_package_scripts_dev: string;
 	export const npm_package_devDependencies_prettier: string;
 	export const npm_package_devDependencies_zod: string;
@@ -238,6 +240,7 @@ declare module '$env/dynamic/private' {
 		GJS_DEBUG_TOPICS: string;
 		npm_package_devDependencies__types_node: string;
 		npm_package_devDependencies_sveltekit_superforms: string;
+		npm_package_dependencies_apexcharts: string;
 		LC_TIME: string;
 		USER: string;
 		PHP_INI_SCAN_DIR: string;
@@ -284,6 +287,7 @@ declare module '$env/dynamic/private' {
 		SYSTEMD_EXEC_PID: string;
 		npm_package_devDependencies_mode_watcher: string;
 		npm_package_dependencies__types_jsonwebtoken: string;
+		npm_package_dependencies_moment: string;
 		npm_config_engine_strict: string;
 		GIO_LAUNCHED_DESKTOP_FILE_PID: string;
 		COLORTERM: string;
@@ -293,8 +297,8 @@ declare module '$env/dynamic/private' {
 		npm_package_devDependencies_typescript: string;
 		WAYLAND_DISPLAY: string;
 		FZF_CTRL_T_OPTS: string;
-		FNM_LOGLEVEL: string;
 		FNM_VERSION_FILE_STRATEGY: string;
+		FNM_LOGLEVEL: string;
 		npm_package_scripts_dev: string;
 		npm_package_devDependencies_prettier: string;
 		npm_package_devDependencies_zod: string;

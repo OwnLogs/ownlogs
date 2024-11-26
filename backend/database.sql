@@ -19,6 +19,7 @@ FLUSH PRIVILEGES;
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `username` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `email` varchar(255) NOT NULL,
   `passwordHash` varchar(255) NOT NULL,
   `role` ENUM('owner','admin','guest') NOT NULL DEFAULT 'guest'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -27,7 +28,8 @@ CREATE TABLE IF NOT EXISTS `server` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `name` varchar(255) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
-  `publicUrl` varchar(255) DEFAULT NULL
+  `publicUrl` varchar(255) DEFAULT NULL,
+  `monitored` BOOLEAN NOT NULL DEFAULT TRUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- Logs table
 CREATE TABLE IF NOT EXISTS `logs` (
@@ -38,6 +40,21 @@ CREATE TABLE IF NOT EXISTS `logs` (
   `source` varchar(255) NOT NULL DEFAULT 'unknown',
   `serverId` int,
   FOREIGN KEY (serverId) REFERENCES server(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- Server monitoring table
+CREATE TABLE IF NOT EXISTS `serverMonitoring` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `serverId` int NOT NULL,
+  `isOnline` BOOLEAN NOT NULL DEFAULT true,
+  FOREIGN KEY (serverId) REFERENCES server(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- Emailing table
+CREATE TABLE IF NOT EXISTS `emailing` (
+  `userId` int NOT NULL,
+  `serverId` int NOT NULL,
+  `enabled` BOOLEAN NOT NULL DEFAULT true,
+  FOREIGN KEY (serverId) REFERENCES server(id),
+  FOREIGN KEY (userId) REFERENCES user(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
@@ -61,6 +78,9 @@ CREATE DEFINER=`logify`@`%` EVENT IF NOT EXISTS `rotate_logs_event` ON SCHEDULE 
 
 -- Add logs server to the server list
 INSERT INTO `server`(`id`, `name`, `description`, `publicUrl`) VALUES (1, 'Logs server', 'The logs server you are looking this from.', 'http://localhost:4173');
+
+-- Add mailing row
+INSERT INTO `emailing` VALUES(1, 1, 1);
 
 
 COMMIT;

@@ -1,16 +1,17 @@
 import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import {
   usernameIsTaken,
-  updateUsername,
   updatePassword,
-  createNewUser
+  createNewUser,
+  getAllUsers,
+  deleteUser,
+  updateUser,
+  type User
 } from '$lib/server/db/user';
 import { generateAccessToken } from '$lib/server/auth';
 import bcrypt from 'bcryptjs';
-import type { PageServerLoad } from './$types';
-import { getAllUsers, deleteUser, updateUser } from '$lib/server/db/user';
-import type { User } from '$lib/server/db/user';
+import { isEmailValid } from '$lib/utils';
 
 export const load = (async () => {
   const allUsers = await getAllUsers();
@@ -23,7 +24,7 @@ export const load = (async () => {
 export const actions: Actions = {
   async updateUsername({ request, cookies, locals }) {
     const formData = Object.fromEntries(await request.formData());
-    const { username } = formData as { username: string };
+    const { username, email } = formData as { username: string; email: string };
 
     if (!locals.user) {
       return fail(401, {
@@ -32,6 +33,14 @@ export const actions: Actions = {
         action: 'updateUsername'
       });
     }
+
+    // Validate email
+    if (!isEmailValid(email))
+      return fail(400, {
+        error: true,
+        message: 'Please provide a valid email address!',
+        action: 'updateUsername'
+      });
 
     if (!username) {
       return fail(400, {
@@ -76,7 +85,7 @@ export const actions: Actions = {
           action: 'updateUsername'
         });
 
-      await updateUsername(locals.user.id, username);
+      await updateUser(locals.user.id, { username, email, role: locals.user.role } as { username: string; email: string; role: User['role'] });
       cookies.set('token', generateAccessToken(username), {
         path: '/',
         maxAge: 60 * 60 * 24,
@@ -143,8 +152,9 @@ export const actions: Actions = {
   },
   async createGuestAccount({ request }) {
     const formData = Object.fromEntries(await request.formData());
-    const { username, password, role } = formData as {
+    const { username, email, password, role } = formData as {
       username: string;
+      email: string;
       password: string;
       role: string;
     };
@@ -153,6 +163,14 @@ export const actions: Actions = {
     const usernameIsAlreadyUsed = await usernameIsTaken(username);
 
     if (usernameIsAlreadyUsed) return fail(400, { error: true, message: 'Username is taken!' });
+
+    // Validate email
+    if (!isEmailValid(email))
+      return fail(400, {
+        error: true,
+        message: 'Please provide a valid email address!',
+        action: 'createGuestAccount'
+      });
 
     // Validate username (only letters and numbers)
     if (!/^[a-zA-Z0-9]+$/.test(username))
@@ -199,11 +217,12 @@ export const actions: Actions = {
     const hash = await bcrypt.hash(password, salt);
 
     // Create user
-    const { insertId } = await createNewUser(username, hash, role);
+    const { insertId } = await createNewUser(username, email, hash, role);
 
     const newUser = {
       username,
       role,
+      email,
       id: insertId
     };
 
@@ -259,8 +278,9 @@ export const actions: Actions = {
   async editUserAccount({ request, locals }) {
     const formData = Object.fromEntries(await request.formData());
 
-    const { userId, username, role } = formData as {
+    const { userId, username, email, role } = formData as {
       userId: string;
+      email: string;
       username: string;
       role: string;
     };
@@ -269,6 +289,14 @@ export const actions: Actions = {
       return fail(401, {
         error: true,
         message: 'You must be logged in to edit a user!',
+        action: 'editUserAccount'
+      });
+    }
+
+    if (!isEmailValid(email)) {
+      return fail(400, {
+        error: true,
+        message: 'Please provide a valid email address!',
         action: 'editUserAccount'
       });
     }
@@ -299,9 +327,10 @@ export const actions: Actions = {
 
     // Edit user
     try {
-      await updateUser(parseInt(userId), { username, role } as {
+      await updateUser(parseInt(userId), { username, role, email } as {
         username: string;
         role: User['role'];
+        email: string;
       });
 
       return {

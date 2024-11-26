@@ -1,5 +1,5 @@
 import type { PageServerLoad, Actions } from './$types.js';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { formSchema } from './schema';
@@ -21,7 +21,13 @@ export const actions: Actions = {
       });
     }
 
-    const newServer = await createServer(form.data);
+    if (!event.locals?.user?.id) {
+      return fail(401, {
+        error: true,
+        message: 'You must be logged in to create a server'
+      });
+    }
+    const newServer = await createServer(event.locals.user.id, form.data);
 
     // Notify the backend that a new server was created to update the cache
     const res = await fetch(API_URL + '/createdServer', {
@@ -38,9 +44,6 @@ export const actions: Actions = {
       });
     }
 
-    return {
-      form,
-      serverId: newServer.insertId
-    };
+    throw redirect(303, `/app/servers/${newServer.insertId}`);
   }
 };

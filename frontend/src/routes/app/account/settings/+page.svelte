@@ -26,9 +26,10 @@
   const isDesktop = new MediaQuery('(min-width: 768px)');
   let allUsers = $state(data.allUsers);
   let user = $state(data.user);
-  let isUpdatingUsername: boolean = $state(false);
+  let isUpdatingUserDetails: boolean = $state(false);
   let isUpdatingPassword: boolean = $state(false);
   let usernameInputValue: string = $state(user?.username || '');
+  let emailInputValue: string = $state(user?.email || '');
   let currentPasswordInputValue: string = $state('');
   let newPasswordInputValue: string = $state('');
   let isCreatingGuestAccount: boolean = $state(false);
@@ -105,7 +106,7 @@
           isDeleingUserAccount = true;
           return async ({ update }) => {
             isDeleingUserAccount = false;
-            update();
+            update({ reset: false });
           };
         }}
       >
@@ -137,10 +138,21 @@
             isSavingUserAccount = true;
             return async ({ update }) => {
               isSavingUserAccount = false;
-              update();
+              update({ reset: false });
             };
           }}
         >
+          <div class="flex flex-col gap-1">
+            <Label for="username">E-mail</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="E-mail"
+              value={editUserModal.user.email}
+            />
+          </div>
+
           <div class="flex flex-col gap-1">
             <Label for="username">Username</Label>
             <Input
@@ -182,7 +194,7 @@
             isSavingUserAccount = true;
             return async ({ update }) => {
               isSavingUserAccount = false;
-              update();
+              update({ reset: false });
             };
           }}
         >
@@ -191,6 +203,17 @@
           </Drawer.Header>
 
           <div class="space-y-4 px-4">
+            <div class="flex flex-col gap-1">
+              <Label for="username">E-mail</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="E-mail"
+                value={editUserModal.user.email}
+              />
+            </div>
+
             <div class="flex flex-col gap-1">
               <Label for="username">Username</Label>
               <Input
@@ -247,14 +270,25 @@
             method="POST"
             class="space-y-4"
             use:enhance={() => {
-              isUpdatingUsername = true;
+              isUpdatingUserDetails = true;
               return async ({ update }) => {
-                isUpdatingUsername = false;
-                update();
+                isUpdatingUserDetails = false;
+                update({ reset: false });
               };
             }}
           >
             <h3 class="text-lg font-medium">Account</h3>
+            <div class="flex flex-col gap-1">
+              <Label for="email">E-mail</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Your e-mail"
+                bind:value={emailInputValue}
+              />
+            </div>
+
             <div class="flex flex-col gap-1">
               <Label for="username">Username</Label>
               <Input
@@ -270,8 +304,8 @@
               class="mt-4"
               type="submit"
               color="primary"
-              disabled={isUpdatingUsername || usernameInputValue === user?.username}
-              loading={isUpdatingUsername}
+              disabled={isUpdatingUserDetails || usernameInputValue === user?.username || emailInputValue === user?.email}
+              loading={isUpdatingUserDetails}
             >
               Save
             </Button>
@@ -287,7 +321,7 @@
               isUpdatingPassword = true;
               return async ({ update }) => {
                 isUpdatingPassword = false;
-                update();
+                update({ reset: false });
               };
             }}
           >
@@ -336,7 +370,7 @@
         <Card.Header>
           <Card.Title>Create an account</Card.Title>
           <Card.Description
-            >Enter a username and password below to create a guest account</Card.Description
+            >Enter an e-mail, username and password below to create a guest account</Card.Description
           >
         </Card.Header>
         <Card.Content class="space-y-8">
@@ -348,11 +382,23 @@
                 isCreatingGuestAccount = true;
                 return async ({ update }) => {
                   isCreatingGuestAccount = false;
-                  update();
+                  update({ reset: false });
                 };
               }}
             >
               <div class="grid gap-4">
+                <div class="grid gap-1">
+                  <Label class="sr-only" for="email">E-mail</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    placeholder="E-mail"
+                    type="text"
+                    autocapitalize="none"
+                    autocomplete="email"
+                    autocorrect="off"
+                  />
+                </div>
                 <div class="grid gap-1">
                   <Label class="sr-only" for="username">Username</Label>
                   <Input
@@ -366,7 +412,7 @@
                   />
                 </div>
                 <div class="grid gap-1">
-                  <Label class="sr-only" for="email">Password</Label>
+                  <Label class="sr-only" for="password">Password</Label>
                   <Input
                     id="password"
                     name="password"

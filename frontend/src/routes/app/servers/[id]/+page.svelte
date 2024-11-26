@@ -16,16 +16,18 @@
   import * as Tooltip from '$lib/components/ui/tooltip/index.js';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
   import * as Drawer from '$lib/components/ui/drawer/index.js';
+  // import MonitoringGraph from './MonitoringGraph.svelte';
+  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
 
   const { data, form } = $props();
-  const { server } = data;
+  const { server, monitoring, mailingEnabled } = data;
   const isDesktop = new MediaQuery('(min-width: 768px)');
 
   let deleteServerModalOpen: boolean = $state(false);
   let deleteServerNameConfirmValue: string = $state('');
   let isDeletingServer: boolean = $state(false);
   let editServerModalOpen: boolean = $state(false);
-  let editServerNewServer: Server = $state(server);
+  let editServerNewServer = $state({ ...server, mailingEnabled: mailingEnabled });
   let isEditingServer: boolean = $state(false);
 
   pageMetadata.set({
@@ -62,11 +64,13 @@
         action="?/editServer"
         method="POST"
         class="mt-4 grid gap-4"
-        use:enhance={() => {
+        use:enhance={(e) => {
+          console.log(editServerNewServer.mailingEnabled)
+          e.formData.append('emailAlerts', editServerNewServer.mailingEnabled.toString());
           isDeletingServer = true;
           return async ({ update }) => {
             isDeletingServer = false;
-            update();
+            update({ reset: false });
           };
         }}
       >
@@ -99,6 +103,11 @@
           <p class="text-sm text-muted-foreground">(Optional): Used for uptime monitoring.</p>
         </div>
 
+        <div class="flex flex-row gap-4 items-center">
+          <Checkbox name="emailAlerts" id="emailAlerts" bind:checked={editServerNewServer.mailingEnabled} />
+          <Label for="emailAlerts">Enable email alerts</Label>
+        </div>
+
         <Button type="submit" disabled={isEditingServer} loading={isEditingServer}>Save</Button>
       </form>
     </Sheet.Content>
@@ -115,7 +124,7 @@
           isDeletingServer = true;
           return async ({ update }) => {
             isDeletingServer = false;
-            update();
+            update({ reset: false });
           };
         }}
       >
@@ -154,6 +163,11 @@
           </div>
         </div>
 
+        <div class="flex flex-row gap-4 items-center">
+          <Checkbox name="emailAlerts" id="emailAlerts" />
+          <Label for="emailAlerts">Enable email alerts</Label>
+        </div>
+
         <Drawer.Footer>
           <Button type="submit" disabled={isEditingServer} loading={isEditingServer}>Save</Button>
           <Drawer.Close type="button" class={buttonVariants({ variant: 'outline' })}
@@ -183,7 +197,7 @@
         isDeletingServer = true;
         return async ({ update }) => {
           isDeletingServer = false;
-          update();
+          update({ reset: false });
         };
       }}
     >
@@ -208,7 +222,7 @@
 </AlertDialog.Root>
 
 <div class="flex w-full flex-col">
-  <div class="gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+  <div class="gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 space-y-8">
     <Card.Root>
       <Card.Header>
         <div class="flex flex-row items-center gap-2">
@@ -274,5 +288,15 @@
         {/if}
       </Card.Content>
     </Card.Root>
+
+    <!-- <Card.Root>
+      <Card.Header>
+        <Card.Title>Monitoring</Card.Title>
+      </Card.Header>
+
+      <Card.Content>
+        <MonitoringGraph {monitoring} />
+      </Card.Content>
+    </Card.Root> -->
   </div>
 </div>

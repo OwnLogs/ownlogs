@@ -4,14 +4,23 @@ import { generateAccessToken } from '$lib/server/auth';
 import { fail } from '@sveltejs/kit';
 import bcrypt from 'bcryptjs';
 import { usernameIsTaken, createNewUser } from '$lib/server/db/user';
+import { isEmailValid } from '$lib/utils';
 
 export const actions: Actions = {
   async register({ cookies, request }) {
     const formData = Object.fromEntries(await request.formData());
-    const { username, password } = formData as {
+    const { username, email, password } = formData as {
       username: string;
+      email: string;
       password: string;
     };
+
+    // Validate email
+    if(!isEmailValid(email))
+      return fail(400, {
+        error: true,
+        message: 'Invalid email!'
+      });
 
     // Check if username is already used
     const usernameIsAlreadyUsed = await usernameIsTaken(username);
@@ -51,7 +60,7 @@ export const actions: Actions = {
     const hash = await bcrypt.hash(password, salt);
 
     // Create user
-    await createNewUser(username, hash, 'owner');
+    await createNewUser(username, email, hash, 'owner');
 
     // Set token
     cookies.set('token', generateAccessToken(username), {

@@ -49,6 +49,23 @@ class UserDAO {
     await DB.execute(sql, params);
     return user;
   }
+
+  async getUsersToEmail(serverId: number): Promise<string[]> {
+    try {
+      const sql = `
+        SELECT DISTINCT U.email
+        FROM emailing E
+        JOIN user U ON E.userId = U.id
+        WHERE E.enabled = 1
+          AND E.serverId = ?
+      `;
+      const rows = await DB.query(sql, [serverId]);
+      return rows.map((row) => row.email);
+    } catch (error) {
+      console.error('Error getting users to email:', error);
+      return [];
+    }
+  }
 }
 
 export default new UserDAO();

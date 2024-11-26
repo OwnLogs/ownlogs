@@ -1,9 +1,11 @@
 import db from './';
 import { type ResultSetHeader, type RowDataPacket } from 'mysql2';
+import { isEmailValid } from '$lib/utils';
 
 export interface User {
   id: number;
   username: string;
+  email: string;
   passwordHash: string;
   role: 'owner' | 'admin' | 'guest';
 }
@@ -15,12 +17,13 @@ export async function hasAUserRegistered(): Promise<boolean> {
 
 export async function createNewUser(
   username: string,
+  email: string,
   passwordHash: string,
   role: string = 'guest'
 ): Promise<ResultSetHeader> {
   const [rows] = await db.execute(
-    'INSERT INTO user (username, passwordHash, role) VALUES (?, ?, ?)',
-    [username, passwordHash, role]
+    'INSERT INTO user (username, email, passwordHash, role) VALUES (?, ?, ?, ?)',
+    [username, email, passwordHash, role]
   );
   return rows as ResultSetHeader;
 }
@@ -45,11 +48,6 @@ export async function usernameIsTaken(username: string): Promise<boolean> {
   return users[0].username === username;
 }
 
-export async function updateUsername(id: number, username: string): Promise<ResultSetHeader> {
-  const [rows] = await db.execute('UPDATE user SET username = ? WHERE id = ?', [username, id]);
-  return rows as ResultSetHeader;
-}
-
 export async function updatePassword(id: number, passwordHash: string): Promise<ResultSetHeader> {
   const [rows] = await db.execute('UPDATE user SET passwordHash = ? WHERE id = ?', [
     passwordHash,
@@ -70,7 +68,7 @@ export async function deleteUser(id: number): Promise<ResultSetHeader> {
 
 export async function updateUser(
   id: number,
-  { username, role }: { username: string; role: User['role'] }
+  { username, role, email }: { username: string; role: User['role']; email: string; }
 ): Promise<ResultSetHeader> {
   if (!username || !role) throw new Error('Username and role are required to update a user.');
 
@@ -84,6 +82,10 @@ export async function updateUser(
 
   if (username.length > 20) {
     throw new Error('Username must be at most 20 characters long!');
+  }
+
+  if(!isEmailValid(email)) {
+    throw new Error('Email is not valid!');
   }
 
   if (role == 'owner') {
@@ -100,8 +102,9 @@ export async function updateUser(
     throw new Error('Username is already taken!');
   }
 
-  const [rows] = await db.execute('UPDATE user SET username = ?, role = ? WHERE id = ?', [
+  const [rows] = await db.execute('UPDATE user SET username = ?, email = ?, role = ? WHERE id = ?', [
     username,
+    email,
     role,
     id
   ]);

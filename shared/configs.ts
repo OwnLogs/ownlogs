@@ -43,6 +43,19 @@ const defaultBackendConfig: FinalBackendConfig = {
     '::ffff:127.0.0.1', // IPv4 localhost
   ],
   cachingTime: 1000 * 60, // 1 minute
+  SMTP: {
+    host: '', // Service name matches the Docker container name
+    port: 587,
+    secure: false, // Postfix doesn't use SSL/TLS
+    auth: {
+      user: '',
+      pass: ''
+    },
+    sendingFrom: 'alerts@logify.com'
+  },
+  monitoring: {
+    check_interval: 1000 * 60 * 5, // 5 minutes
+  }
 };
 
 export const getBackendConfig = (): FinalBackendConfig => {

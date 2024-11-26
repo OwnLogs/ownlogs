@@ -24,22 +24,39 @@ export async function getAllServers(): Promise<Server[]> {
   return servers;
 }
 
-export async function getServerById(id: number): Promise<Server | null> {
+export async function getServerById(
+  userId: number,
+  id: number
+): Promise<{ server: Server; mailingEnabled: boolean } | null> {
   const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM server WHERE id = ?', [id]);
+  const [mailingEnabled] = await db.query<RowDataPacket[]>(
+    'SELECT enabled FROM emailing WHERE userId = ? AND serverId = ?',
+    [userId, id]
+  );
 
   if (rows.length === 0) return null;
   const server = rows[0] as Server;
   server.isOnline = await isServerOnline(server);
-  return server;
+  return { server, mailingEnabled: mailingEnabled[0].enabled === 1 };
 }
 
-export async function createServer(server: Server): Promise<ResultSetHeader> {
+export async function createServer(userId: number, server: Server): Promise<ResultSetHeader> {
   const [result] = await db.query('INSERT INTO server SET ?', server);
+  await db.query('INSERT INTO emailing(`userId`, `serverId`) VALUES (?, ?)', [
+    userId,
+    (result as ResultSetHeader).insertId
+  ]);
   return result as ResultSetHeader;
 }
 
 export async function deleteServer(id: number): Promise<boolean> {
   try {
+    const [emailingResult] = await db.query('DELETE FROM emailing WHERE serverId = ?', [id]);
+
+    if ((emailingResult as ResultSetHeader).affectedRows < 1) {
+      return false;
+    }
+    
     const [result] = await db.query('DELETE FROM server WHERE id = ?', [id]);
 
     return (result as ResultSetHeader).affectedRows >= 1;

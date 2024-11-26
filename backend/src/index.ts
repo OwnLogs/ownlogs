@@ -7,6 +7,8 @@ import Logger from './logger';
 import { startMonitoring } from './databaseMonitoring';
 import { filterIp } from './ipFiltering';
 import LogDAO from './db/LogDAO';
+import { monitorServers } from './serverMonitoring';
+import { monitoring } from './routes/get/monitoring';
 
 // Routes handlers
 import { postLogs } from './routes/post/logs';
@@ -84,6 +86,7 @@ app.use('/ws', router);
 // /api routes
 router.post('/deletedServer', deletedServer);
 router.post('/createdServer', createdServer);
+router.get('/monitoring', monitoring);
 app.use('/api', router);
 
 // Receiving logs
@@ -93,13 +96,15 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hi, you need to send your logs to /logs endpoint');
 });
 
-startMonitoring();
-
 app.listen(port, async () => {
+  // Monitor database size and prune logs if necessary
+  startMonitoring();
   // Settings initial known server ids
   knownServerIdsCache.set(await LogDAO.getKnownServerIds());
   // Prune cache every MAX_CACHE_TIME
   setInterval(knownServerIdsCache.pruneCache, knownServerIdsCache.MAX_CACHE_TIME);
+  // Monitor servers
+  setInterval(monitorServers, config.monitoring.check_interval);
 
   Logger.info(`[server]: Server is running at http://localhost:${port}`);
 });

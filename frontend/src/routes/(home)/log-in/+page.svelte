@@ -61,13 +61,13 @@
             isLoading = true;
             return async ({ update }) => {
               isLoading = false;
-              update();
+              update({ reset: false });
             };
           }}
         >
           <div class="grid gap-2">
             <div class="grid gap-1">
-              <Label class="sr-only" for="email">Username</Label>
+              <Label class="sr-only" for="username">Username</Label>
               <Input
                 id="username"
                 name="username"
@@ -79,7 +79,7 @@
               />
             </div>
             <div class="grid gap-1">
-              <Label class="sr-only" for="email">Password</Label>
+              <Label class="sr-only" for="password">Password</Label>
               <Input
                 id="password"
                 name="password"

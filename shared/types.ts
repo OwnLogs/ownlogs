@@ -36,6 +36,13 @@ export interface Server {
   isOnline?: boolean;
 }
 
+export interface ServerMonitoring {
+  id?: number;
+  serverId: number;
+  isOnline: boolean;
+  timestamp: Date;
+}
+
 
 // CONFIGS
 export interface BackendConfig {
@@ -45,6 +52,19 @@ export interface BackendConfig {
     prune_interval?: number;
   },
   allowedIps?: string[];
+  SMTP?: {
+    host?: string;
+    port?: number;
+    secure?: boolean;
+    auth?: {
+      user?: string;
+      pass?: string;
+    },
+    sendingFrom?: string;
+  },
+  monitoring?: {
+    check_interval?: number;
+  }
 }
 export interface FinalBackendConfig extends BackendConfig {
   database: {
@@ -54,4 +74,17 @@ export interface FinalBackendConfig extends BackendConfig {
   },
   allowedIps: string[];
   cachingTime: number;
+  SMTP: {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: {
+      user: string;
+      pass: string;
+    },
+    sendingFrom: string;
+  },
+  monitoring: {
+    check_interval: number;
+  }
 }
