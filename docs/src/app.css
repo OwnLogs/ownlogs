@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+}
+
+* {
+  @apply scroll-smooth outline-offset-4 !outline-primary-600 focus:outline-1 dark:!outline-primary-600;
+}
+
+html {
+  @apply scroll-pt-20 font-sans md:scroll-pt-28;
+}
+
+body {
+  @apply bg-body font-['Mulish'] text-text-heading dark:bg-body-dark dark:text-text-heading-dark;
+}
+
+::-webkit-scrollbar {
+  @apply h-2 w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-inherit;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-neutral-300 dark:bg-neutral-700;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-400 dark:bg-neutral-600;
+}
+
+::selection,
+::-moz-selection {
+  @apply bg-primary-300 text-primary-950;
+}
+
+/* Text */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-['Poppins'] text-black text-wrap-balance dark:text-white;
+}
+
+h1 {
+  @apply mb-2 mt-4 text-3xl font-medium leading-[3.5rem] md:font-semibold md:leading-[4rem];
+}
+
+h2 {
+  @apply mb-4 mt-12 text-2xl font-bold leading-6;
+}
+
+h3 {
+  @apply mb-2 mt-9 text-xl font-semibold leading-6;
+}
+
+h4 {
+  @apply mb-2 mt-4 text-xl font-semibold;
+}
+
+h5 {
+  @apply mb-2 mt-4 text-lg font-semibold;
+}
+
+h6 {
+  @apply mb-2 mt-4 text-base font-semibold;
+}
+
+p,
+li {
+  @apply mb-4 font-['Mulish'] text-base font-medium leading-6 text-text-body text-wrap-none dark:text-text-body-dark;
+}
+span,
+small {
+  @apply text-text-body dark:text-text-body-dark;
+}
+p.balance {
+  @apply text-wrap-balance;
+}
+small {
+  @apply text-xs;
+}
+hr {
+  @apply mx-4 my-8 h-[2px] rounded-full border-none bg-neutral-300/50 dark:bg-neutral-800;
+}
+/* Page links */
+.link {
+  @apply relative inline-flex cursor-pointer flex-row items-center gap-1 border-b border-primary-400/50 bg-primary-300/30 text-inherit text-primary-900 no-underline transition-colors hocus:border-primary-400/75 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-500;
+}
+
+/* Others */
+kbd {
+  @apply rounded bg-neutral-300 px-2 py-1 font-mono text-sm font-normal text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200;
+}
+
+mark {
+  @apply bg-transparent text-primary-400 dark:bg-transparent dark:text-primary-600;
+}

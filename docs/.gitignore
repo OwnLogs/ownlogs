@@ -1,11 +1,10 @@
 node_modules
 
 # Output
-.output/
-.vercel/
-/**/.svelte-kit/
-build/
-dist/
+.output
+.vercel
+/.svelte-kit
+/build
 
 # OS
 .DS_Store
@@ -21,5 +20,14 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Bun
+bun.lockb
+
+# pnpm
 pnpm-lock.yaml
-db_data/
+
+# Backup
+backup
+
+# Unlighthouse
+.unlighthouse
