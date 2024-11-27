@@ -68,7 +68,7 @@ export async function deleteUser(id: number): Promise<ResultSetHeader> {
 
 export async function updateUser(
   id: number,
-  { username, role, email }: { username: string; role: User['role']; email: string; }
+  { username, role, email }: { username: string; role: User['role']; email: string }
 ): Promise<ResultSetHeader> {
   if (!username || !role) throw new Error('Username and role are required to update a user.');
 
@@ -84,7 +84,7 @@ export async function updateUser(
     throw new Error('Username must be at most 20 characters long!');
   }
 
-  if(!isEmailValid(email)) {
+  if (!isEmailValid(email)) {
     throw new Error('Email is not valid!');
   }
 
@@ -102,11 +102,9 @@ export async function updateUser(
     throw new Error('Username is already taken!');
   }
 
-  const [rows] = await db.execute('UPDATE user SET username = ?, email = ?, role = ? WHERE id = ?', [
-    username,
-    email,
-    role,
-    id
-  ]);
+  const [rows] = await db.execute(
+    'UPDATE user SET username = ?, email = ?, role = ? WHERE id = ?',
+    [username, email, role, id]
+  );
   return rows as ResultSetHeader;
 }

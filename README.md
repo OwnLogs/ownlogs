@@ -28,14 +28,16 @@ To run the project, just run `./run.sh`.
  - [ ] Make better log details modal tables
  - [x] Add known server ids cache invalidation on the server
  - [x] Add guest account management (Listing and deletion)
- - [ ] Make graphs of received logs
- - [ ] Make a logo
+ - [x] Make graphs of received logs
+ - [x] Make a logo
  - [x] Add email alerts
- - [ ] Server surveillance
-   - [ ] Add periodic server check and insert status in a new table to then display analytics
-   - [ ] Add ability to change start and end dates to server graphs
+ - [ ] Add authentication on the post routes in the backend
+ - [x] Server monitoring
+   - [x] Add periodic server check and insert status in a new table to then display analytics
    - [x] Add editing to the server on the frontend
    - [x] Add deletion of a server
    - [x] Make a servers list page
    - [x] Make a single server page
    - [x] Change edit server modal into a Sheet (Side modal)
+ - [ ] Roles
+   - [ ] Add permission management

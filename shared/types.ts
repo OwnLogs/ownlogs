@@ -33,14 +33,15 @@ export interface Server {
   description?: string;
   name: string;
   publicUrl?: string;
-  isOnline?: boolean;
+  monitored?: boolean;
 }
 
 export interface ServerMonitoring {
   id?: number;
   serverId: number;
-  isOnline: boolean;
   timestamp: Date;
+  duration: number;
+  errors?: [string] | null;
 }
 
 

@@ -1,9 +1,14 @@
 import db from '.';
 
-export async function setMailing(userId: number, serverId: number, enabled: boolean): Promise<boolean> {
+export async function setMailing(
+  userId: number,
+  serverId: number,
+  enabled: boolean
+): Promise<boolean> {
   try {
     await db.query('UPDATE emailing SET enabled = ? WHERE userId = ? AND serverId = ?', [
-      enabled, userId,
+      enabled,
+      userId,
       serverId,
       enabled
     ]);

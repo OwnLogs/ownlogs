@@ -15,6 +15,9 @@
   import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
   import * as Drawer from '$lib/components/ui/drawer/index.js';
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+  import { hasPermission, hasAtLeastOnePermission, PERMISSIONS } from '@shared/roles';
+  import { Ellipsis, Pencil, Trash2 } from 'lucide-svelte';
 
   pageMetadata.set({
     title: 'Settings',
@@ -87,40 +90,42 @@
 </script>
 
 <!-- Confirm user account deletion modal -->
-<AlertDialog.Root bind:open={deleteAccountModalConfirm.visible}>
-  <AlertDialog.Content>
-    <AlertDialog.Header>
-      <AlertDialog.Title>Confirm account deletion</AlertDialog.Title>
-      <AlertDialog.Description>
-        This action cannot be undone. This will permanently delete {deleteAccountModalConfirm.user
-          ?.username}'s account.
-      </AlertDialog.Description>
-    </AlertDialog.Header>
-    <AlertDialog.Footer>
-      <form
-        action="?/deleteUserAccount"
-        class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
-        method="POST"
-        use:enhance={(e) => {
-          e.formData.append('userId', deleteAccountModalConfirm.user?.id?.toString() || '');
-          isDeleingUserAccount = true;
-          return async ({ update }) => {
-            isDeleingUserAccount = false;
-            update({ reset: false });
-          };
-        }}
-      >
-        <AlertDialog.Cancel type="button">Cancel</AlertDialog.Cancel>
-        <Button disabled={isDeleingUserAccount} loading={isDeleingUserAccount} type="submit"
-          >Continue</Button
+{#if hasPermission(user?.role, PERMISSIONS.DELETE_OTHER_ACCOUNTS)}
+  <AlertDialog.Root bind:open={deleteAccountModalConfirm.visible}>
+    <AlertDialog.Content>
+      <AlertDialog.Header>
+        <AlertDialog.Title>Confirm account deletion</AlertDialog.Title>
+        <AlertDialog.Description>
+          This action cannot be undone. This will permanently delete {deleteAccountModalConfirm.user
+            ?.username}'s account.
+        </AlertDialog.Description>
+      </AlertDialog.Header>
+      <AlertDialog.Footer>
+        <form
+          action="?/deleteUserAccount"
+          class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
+          method="POST"
+          use:enhance={(e) => {
+            e.formData.append('userId', deleteAccountModalConfirm.user?.id?.toString() || '');
+            isDeleingUserAccount = true;
+            return async ({ update }) => {
+              isDeleingUserAccount = false;
+              update({ reset: false });
+            };
+          }}
         >
-      </form>
-    </AlertDialog.Footer>
-  </AlertDialog.Content>
-</AlertDialog.Root>
+          <AlertDialog.Cancel type="button">Cancel</AlertDialog.Cancel>
+          <Button disabled={isDeleingUserAccount} loading={isDeleingUserAccount} type="submit"
+            >Continue</Button
+          >
+        </form>
+      </AlertDialog.Footer>
+    </AlertDialog.Content>
+  </AlertDialog.Root>
+{/if}
 
 <!-- Edit user modal -->
-{#if editUserModal?.user}
+{#if editUserModal?.user && hasPermission(user?.role, PERMISSIONS.UPDATE_OTHER_ACCOUNTS)}
   {#if isDesktop.matches}
     <!-- On desktop -->
     <Sheet.Root bind:open={editUserModal.visible}>
@@ -251,12 +256,14 @@
   {/if}
 {/if}
 
-<div class="mx-auto flex max-w-screen-md flex-col gap-4 p-4 md:gap-8 md:p-8">
+<div class="mx-auto flex w-full max-w-screen-md flex-col gap-4 p-4 md:gap-8 md:p-8">
   <Tabs.Root value="account">
     <!-- Panel selector -->
     <Tabs.List class="grid w-full grid-cols-2">
       <Tabs.Trigger value="account">Your Account Settings</Tabs.Trigger>
-      <Tabs.Trigger value="guestAccounts">Guest Accounts</Tabs.Trigger>
+      {#if hasAtLeastOnePermission(user?.role, PERMISSIONS.READ_OTHER_ACCOUNTS, PERMISSIONS.CREATE_OTHER_ACCOUNTS, PERMISSIONS.DELETE_OTHER_ACCOUNTS, PERMISSIONS.UPDATE_OTHER_ACCOUNTS)}
+        <Tabs.Trigger value="guestAccounts">Guest Accounts</Tabs.Trigger>
+      {/if}
     </Tabs.List>
     <!-- Account settings panel -->
     <Tabs.Content value="account">
@@ -304,7 +311,9 @@
               class="mt-4"
               type="submit"
               color="primary"
-              disabled={isUpdatingUserDetails || usernameInputValue === user?.username || emailInputValue === user?.email}
+              disabled={isUpdatingUserDetails ||
+                usernameInputValue === user?.username ||
+                emailInputValue === user?.email}
               loading={isUpdatingUserDetails}
             >
               Save
@@ -363,136 +372,162 @@
         </Card.Content>
       </Card.Root>
     </Tabs.Content>
-    <!-- Create guest accounts panel -->
-    <Tabs.Content value="guestAccounts">
-      <!-- Create a guest account -->
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>Create an account</Card.Title>
-          <Card.Description
-            >Enter an e-mail, username and password below to create a guest account</Card.Description
-          >
-        </Card.Header>
-        <Card.Content class="space-y-8">
-          <div class="grid gap-6">
-            <form
-              method="POST"
-              action="?/createGuestAccount"
-              use:enhance={() => {
-                isCreatingGuestAccount = true;
-                return async ({ update }) => {
-                  isCreatingGuestAccount = false;
-                  update({ reset: false });
-                };
-              }}
-            >
-              <div class="grid gap-4">
-                <div class="grid gap-1">
-                  <Label class="sr-only" for="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    placeholder="E-mail"
-                    type="text"
-                    autocapitalize="none"
-                    autocomplete="email"
-                    autocorrect="off"
-                  />
-                </div>
-                <div class="grid gap-1">
-                  <Label class="sr-only" for="username">Username</Label>
-                  <Input
-                    id="username"
-                    name="username"
-                    placeholder="Username"
-                    type="text"
-                    autocapitalize="none"
-                    autocomplete="username"
-                    autocorrect="off"
-                  />
-                </div>
-                <div class="grid gap-1">
-                  <Label class="sr-only" for="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    placeholder="Password"
-                    type="password"
-                    autocapitalize="none"
-                    autocomplete="current-password"
-                    autocorrect="off"
-                  />
-                </div>
-                <div class="grid gap-1">
-                  <Label class="sr-only" for="role">Role</Label>
-                  <Select.Root type="single" name="role">
-                    <Select.Trigger>Role</Select.Trigger>
-                    <Select.Content>
-                      <Select.Item value="guest">Guest</Select.Item>
-                      <Select.Item value="admin">Admin</Select.Item>
-                    </Select.Content>
-                  </Select.Root>
-                </div>
-                <Button
-                  type="submit"
-                  loading={isCreatingGuestAccount}
-                  disabled={isCreatingGuestAccount}>Create</Button
+    <!-- Guest accounts panel -->
+    {#if hasAtLeastOnePermission(user?.role, PERMISSIONS.READ_OTHER_ACCOUNTS, PERMISSIONS.CREATE_OTHER_ACCOUNTS, PERMISSIONS.DELETE_OTHER_ACCOUNTS, PERMISSIONS.UPDATE_OTHER_ACCOUNTS)}
+      <Tabs.Content value="guestAccounts">
+        <!-- Create a guest account -->
+        {#if hasPermission(user?.role, PERMISSIONS.CREATE_OTHER_ACCOUNTS)}
+          <Card.Root>
+            <Card.Header>
+              <Card.Title>Create an account</Card.Title>
+              <Card.Description
+                >Enter an e-mail, username and password below to create a guest account</Card.Description
+              >
+            </Card.Header>
+            <Card.Content class="space-y-8">
+              <div class="grid gap-6">
+                <form
+                  method="POST"
+                  action="?/createGuestAccount"
+                  use:enhance={() => {
+                    isCreatingGuestAccount = true;
+                    return async ({ update }) => {
+                      isCreatingGuestAccount = false;
+                      update({ reset: false });
+                    };
+                  }}
                 >
+                  <div class="grid gap-4">
+                    <div class="grid gap-1">
+                      <Label class="sr-only" for="email">E-mail</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        placeholder="E-mail"
+                        type="text"
+                        autocapitalize="none"
+                        autocomplete="email"
+                        autocorrect="off"
+                      />
+                    </div>
+                    <div class="grid gap-1">
+                      <Label class="sr-only" for="username">Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        placeholder="Username"
+                        type="text"
+                        autocapitalize="none"
+                        autocomplete="username"
+                        autocorrect="off"
+                      />
+                    </div>
+                    <div class="grid gap-1">
+                      <Label class="sr-only" for="password">Password</Label>
+                      <Input
+                        id="password"
+                        name="password"
+                        placeholder="Password"
+                        type="password"
+                        autocapitalize="none"
+                        autocomplete="current-password"
+                        autocorrect="off"
+                      />
+                    </div>
+                    <div class="grid gap-1">
+                      <Label class="sr-only" for="role">Role</Label>
+                      <Select.Root type="single" name="role">
+                        <Select.Trigger>Role</Select.Trigger>
+                        <Select.Content>
+                          <Select.Item value="guest">Guest</Select.Item>
+                          <Select.Item value="admin">Admin</Select.Item>
+                        </Select.Content>
+                      </Select.Root>
+                    </div>
+                    <Button
+                      type="submit"
+                      loading={isCreatingGuestAccount}
+                      disabled={isCreatingGuestAccount}>Create</Button
+                    >
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
-        </Card.Content>
-      </Card.Root>
+            </Card.Content>
+          </Card.Root>
+        {/if}
 
-      <!-- Guests accounts managent -->
-      <Card.Root class="mt-8">
-        <Card.Header>
-          <Card.Title>Guest accounts</Card.Title>
-          <Card.Description
-            >All of the accounts that have access to the Logify service dashboard.</Card.Description
-          >
-        </Card.Header>
-        <Card.Content class="space-y-8">
-          <div class="flex flex-col gap-4">
-            {#if allUsers.length === 0}
-              <p class="font-medium text-muted-foreground">
-                No guest accounts have been created yet.
-              </p>
-            {:else}
-              <div class="grid gap-4 md:grid-cols-2">
-                {#each allUsers as u}
-                  {@const isOwner = user?.id === u.id}
-                  <!-- If the displayed user is the owner -->
-                  <Card.Root>
-                    <Card.Header>
-                      <Card.Title>{u.username} {isOwner ? '(You)' : ''}</Card.Title>
-                      <Card.Description>{u.role}</Card.Description>
-                    </Card.Header>
-
-                    <Card.Content>
-                      {#if !isOwner}
-                        <div class="grid grid-cols-2 gap-4">
-                          <Button
-                            onclick={() => {
-                              if (user) editUserModal = { visible: true, user: u };
-                            }}>Edit</Button
-                          >
-                          <Button
-                            variant="destructive"
-                            onclick={() => {
-                              if (user) deleteAccountModalConfirm = { visible: true, user: u };
-                            }}>Delete</Button
-                          >
-                        </div>
-                      {/if}
-                    </Card.Content>
-                  </Card.Root>
-                {/each}
+        <!-- Guests accounts managent -->
+        {#if hasPermission(user?.role, PERMISSIONS.READ_OTHER_ACCOUNTS)}
+          <Card.Root class="mt-8">
+            <Card.Header>
+              <Card.Title>Guest accounts</Card.Title>
+              <Card.Description
+                >All of the accounts that have access to the Logify service dashboard.</Card.Description
+              >
+            </Card.Header>
+            <Card.Content class="space-y-8">
+              <div class="flex flex-col gap-4">
+                {#if allUsers.length === 0}
+                  <p class="font-medium text-muted-foreground">
+                    No guest accounts have been created yet.
+                  </p>
+                {:else}
+                  <div class="grid gap-4 md:grid-cols-2">
+                    {#each allUsers as u}
+                      {@const isOwner = user?.id === u.id}
+                      <!-- If the displayed user is the owner -->
+                      <Card.Root>
+                        <Card.Header class="p-6">
+                          <div class="flex flex-row items-center justify-between">
+                            <div class="flex flex-col gap-2">
+                              <Card.Title>{u.username} {isOwner ? '(You)' : ''}</Card.Title>
+                              <Card.Description>{u.role}</Card.Description>
+                            </div>
+                            {#if !isOwner && hasAtLeastOnePermission(user?.role, PERMISSIONS.UPDATE_OTHER_ACCOUNTS, PERMISSIONS.DELETE_OTHER_ACCOUNTS)}
+                              <DropdownMenu.Root>
+                                <DropdownMenu.Trigger>
+                                  <Ellipsis class="size-6 text-muted-foreground" />
+                                </DropdownMenu.Trigger>
+                                <DropdownMenu.Content>
+                                  <DropdownMenu.Group>
+                                    <DropdownMenu.GroupHeading>Actions</DropdownMenu.GroupHeading>
+                                    <DropdownMenu.Separator />
+                                    {#if hasPermission(user?.role, PERMISSIONS.UPDATE_OTHER_ACCOUNTS)}
+                                      <DropdownMenu.Item
+                                        onclick={() => {
+                                          if (user) editUserModal = { visible: true, user: u };
+                                        }}
+                                      >
+                                        <Pencil class="mr-2 size-4" />
+                                        Edit
+                                      </DropdownMenu.Item>
+                                    {/if}
+                                    {#if hasPermission(user?.role, PERMISSIONS.DELETE_OTHER_ACCOUNTS)}
+                                      <DropdownMenu.Item
+                                        onclick={() => {
+                                          if (user)
+                                            deleteAccountModalConfirm = { visible: true, user: u };
+                                        }}
+                                      >
+                                        <Trash2 class="mr-2 size-4 text-red-600" />
+                                        Delete
+                                      </DropdownMenu.Item>
+                                    {/if}
+                                  </DropdownMenu.Group>
+                                </DropdownMenu.Content>
+                              </DropdownMenu.Root>
+                            {/if}
+                          </div>
+                        </Card.Header>
+                      </Card.Root>
+                    {/each}
+                  </div>
+                {/if}
               </div>
-            {/if}
-          </div>
-        </Card.Content>
-      </Card.Root>
-    </Tabs.Content>
+            </Card.Content>
+          </Card.Root>
+        {/if}
+      </Tabs.Content>
+    {/if}
   </Tabs.Root>
 </div>

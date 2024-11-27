@@ -2,26 +2,10 @@ import db from './';
 import { type ResultSetHeader, type RowDataPacket } from 'mysql2';
 import { type Server } from '@shared/types';
 
-const isServerOnline = async (server: Server): Promise<boolean> => {
-  if (!server.publicUrl) {
-    return false;
-  }
-  try {
-    const res = await fetch(server.publicUrl);
-    return res.status === 200;
-  } catch {
-    return false;
-  }
-};
-
 export async function getAllServers(): Promise<Server[]> {
   const [rows] = await db.query<RowDataPacket[]>('SELECT * FROM server');
 
-  const servers = rows as Server[];
-  for (const server of servers) {
-    server.isOnline = await isServerOnline(server);
-  }
-  return servers;
+  return rows as Server[];
 }
 
 export async function getServerById(
@@ -36,8 +20,7 @@ export async function getServerById(
 
   if (rows.length === 0) return null;
   const server = rows[0] as Server;
-  server.isOnline = await isServerOnline(server);
-  return { server, mailingEnabled: mailingEnabled[0].enabled === 1 };
+  return { server, mailingEnabled: mailingEnabled[0]?.enabled === 1 };
 }
 
 export async function createServer(userId: number, server: Server): Promise<ResultSetHeader> {
@@ -56,7 +39,7 @@ export async function deleteServer(id: number): Promise<boolean> {
     if ((emailingResult as ResultSetHeader).affectedRows < 1) {
       return false;
     }
-    
+
     const [result] = await db.query('DELETE FROM server WHERE id = ?', [id]);
 
     return (result as ResultSetHeader).affectedRows >= 1;

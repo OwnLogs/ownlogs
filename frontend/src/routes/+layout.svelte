@@ -4,6 +4,7 @@
   import { Toaster } from '$lib/components/ui/sonner/index.js';
   import { pageMetadata } from '$lib/stores';
   import { page } from '$app/stores';
+  import { mode } from 'mode-watcher';
 
   let { children } = $props();
   const SITE_NAME = 'Logify';
@@ -31,6 +32,13 @@
   <meta name="description" content={$pageMetadata.description} />
   <meta property="og:description" content={$pageMetadata.description} />
   <meta property="twitter:description" content={$pageMetadata.description} />
+
+  <!-- Favicons -->
+  {#if $mode}
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/{$mode}/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicons/{$mode}/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicons/{$mode}/favicon-16x16.png" />
+  {/if}
 </svelte:head>
 
 <ModeWatcher />

@@ -7,8 +7,7 @@ import Logger from './logger';
 import { startMonitoring } from './databaseMonitoring';
 import { filterIp } from './ipFiltering';
 import LogDAO from './db/LogDAO';
-import { monitorServers } from './serverMonitoring';
-import { monitoring } from './routes/get/monitoring';
+import { monitorServers } from './serverMonitoring/index';
 
 // Routes handlers
 import { postLogs } from './routes/post/logs';
@@ -86,7 +85,6 @@ app.use('/ws', router);
 // /api routes
 router.post('/deletedServer', deletedServer);
 router.post('/createdServer', createdServer);
-router.get('/monitoring', monitoring);
 app.use('/api', router);
 
 // Receiving logs

@@ -6,7 +6,7 @@
   import { Plus } from 'lucide-svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import NewServerForm from './NewServerForm.svelte';
-  import ServiceStatus from '$lib/components/ServiceStatus.svelte';
+  import { hasPermission, PERMISSIONS } from '@shared/roles';
 
   pageMetadata.set({
     title: 'Servers',
@@ -14,21 +14,24 @@
     breadcrumbs: [{ name: 'Servers' }]
   });
 
-  let { data }: { data: PageData } = $props();
+  const { data }: { data: PageData } = $props();
+  const { user } = data;
 
   let addServerModalOpen: boolean = $state(false);
 </script>
 
-<!-- Add a server modal -->
-<Dialog.Root bind:open={addServerModalOpen}>
-  <Dialog.Content>
-    <Dialog.Header>
-      <Dialog.Title>Add a new server</Dialog.Title>
-    </Dialog.Header>
+<!-- Create a server modal -->
+{#if hasPermission(user?.role, PERMISSIONS.CREATE_SERVER)}
+  <Dialog.Root bind:open={addServerModalOpen}>
+    <Dialog.Content>
+      <Dialog.Header>
+        <Dialog.Title>Add a new server</Dialog.Title>
+      </Dialog.Header>
 
-    <NewServerForm data={data.newServerForm} bind:open={addServerModalOpen} />
-  </Dialog.Content>
-</Dialog.Root>
+      <NewServerForm data={data.newServerForm} bind:open={addServerModalOpen} />
+    </Dialog.Content>
+  </Dialog.Root>
+{/if}
 
 <div class="flex w-full flex-col">
   <div class="gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
@@ -40,41 +43,42 @@
         >
       </Card.Header>
       <Card.Content class="space-y-8">
-        <Button onclick={() => (addServerModalOpen = true)}>
-          <Plus class="size-6" />
-          Add a server
-        </Button>
+        {#if hasPermission(user?.role, PERMISSIONS.CREATE_SERVER)}
+          <Button onclick={() => (addServerModalOpen = true)}>
+            <Plus class="size-6" />
+            Add a server
+          </Button>
+        {/if}
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {#each data.servers as server}
-            <Card.Root>
-              <Card.Header>
-                <div class="flex flex-row items-center justify-between">
-                  <div class="flex flex-row items-center gap-2">
-                    {#if server.publicUrl}
-                      <ServiceStatus isOnline={server.isOnline} />
-                    {/if}
-                    <Card.Title>{server.name}</Card.Title>
-                  </div>
-                  <div
-                    class="flex flex-row items-center gap-1 rounded border border-border p-1 font-mono"
-                  >
-                    <span class="font-base text-sm">ID:</span><span class="text-base font-bold"
-                      >{server.id}</span
+        {#if hasPermission(user?.role, PERMISSIONS.READ_SERVER)}
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {#each data.servers as server}
+              <Card.Root>
+                <Card.Header>
+                  <div class="flex flex-row items-center justify-between">
+                    <div class="flex flex-row items-center gap-2">
+                      <Card.Title>{server.name}</Card.Title>
+                    </div>
+                    <div
+                      class="flex flex-row items-center gap-1 rounded border border-border p-1 font-mono"
                     >
+                      <span class="font-base text-sm">ID:</span><span class="text-base font-bold"
+                        >{server.id}</span
+                      >
+                    </div>
                   </div>
-                </div>
-              </Card.Header>
-              <Card.Content>
-                <div class="flex justify-between">
-                  <div>
-                    <Button href="/app/servers/{server.id}">Manage</Button>
+                </Card.Header>
+                <Card.Content>
+                  <div class="flex justify-between">
+                    <div>
+                      <Button href="/app/servers/{server.id}">Manage</Button>
+                    </div>
                   </div>
-                </div>
-              </Card.Content>
-            </Card.Root>
-          {/each}
-        </div>
+                </Card.Content>
+              </Card.Root>
+            {/each}
+          </div>
+        {/if}
       </Card.Content>
     </Card.Root>
   </div>

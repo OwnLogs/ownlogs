@@ -1,4 +1,4 @@
-import { type IncomingLog } from '@shared/types';
+import { type IncomingLog } from 'shared/types';
 
 type Config = { backendUrl: string; bufferSize?: number; serverId: number };
 

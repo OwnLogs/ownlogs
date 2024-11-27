@@ -14,7 +14,8 @@ const db = await mysql.createPool({
   connectionLimit: 10,
   waitForConnections: true,
   debug: false,
-  multipleStatements: true
+  multipleStatements: true,
+  timezone: 'Z'
 });
 
 export default db;

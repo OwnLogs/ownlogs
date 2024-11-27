@@ -1,10 +1,11 @@
 import { EventEmitter } from 'events';
 import WebSocket from 'ws';
-import { Log } from '@shared/types';
+import { Log } from '../../../../shared/types';
 import { authenticate, storeUnauthenticatedRequest } from '../../auth';
 import LogDAO from '../../db/LogDAO';
 import Logger from '../../logger';
 import { Request } from 'express';
+import { hasPermission, PERMISSIONS } from '../../../../shared/roles';
 
 export const logEventEmitter = new EventEmitter();
 
@@ -21,7 +22,7 @@ export async function logs(ws: WebSocket, req: Request) {
   }
 
   // Isolate the function that sends data for event listeners purposes
-  const sendNewLogs = async (logs: Log[]) => {
+  const sendNewLogs = async () => {
     ws.send(JSON.stringify({ action: 'newLogs', success: true }));
   };
 
@@ -41,6 +42,10 @@ export async function logs(ws: WebSocket, req: Request) {
 
     switch (action) {
       case 'fetchLogs': {
+        if (!hasPermission(auth.role, PERMISSIONS.READ_LOG)) {
+          ws.send(JSON.stringify({ success: false, error: 'Forbidden' }));
+          return;
+        }
         try {
           const logs = await LogDAO.getLogs(pageSize, page);
 
@@ -61,6 +66,10 @@ export async function logs(ws: WebSocket, req: Request) {
         break;
       }
       case 'deleteLogs': {
+        if (!hasPermission(auth.role, PERMISSIONS.DELETE_LOG)) {
+          ws.send(JSON.stringify({ success: false, error: 'Forbidden' }));
+          return;
+        }
         if (!logIds) {
           ws.send(
             JSON.stringify({ action: 'deleteLogs', success: false, message: 'logIds is required' })
@@ -104,8 +113,10 @@ export async function logs(ws: WebSocket, req: Request) {
   });
 
   // Add the listener to send new logs to the client
-  logEventEmitter.on('newLogs', sendNewLogs);
-  logEventEmitter.on('logsDeleted', logsDeleted);
+  if (hasPermission(auth.role, PERMISSIONS.READ_LOG)) {
+    logEventEmitter.on('newLogs', sendNewLogs);
+    logEventEmitter.on('logsDeleted', logsDeleted);
+  }
 
   ws.on('close', () => {
     // Remove the listener for new logs when the client disconnects

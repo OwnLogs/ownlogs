@@ -4,6 +4,7 @@ export interface User {
   id: number;
   username: string;
   passwordHash: string;
+  role?: string;
 }
 
 class UserDAO {

@@ -1,12 +1,14 @@
 import { Request } from 'express';
-import LogDAO from '../../db/LogDAO';
+import LogDAO, { TransformedData } from '../../db/LogDAO';
 import Logger from '../../logger';
 import WebSocket from 'ws';
 import { authenticate, storeUnauthenticatedRequest } from '../../auth';
 import osu from 'node-os-utils';
-import { ServerStatistics } from '@shared/types';
+import { Log, LogLevel, Server, ServerStatistics } from '../../../../shared/types';
 import DB from '../../db';
 import { logEventEmitter } from './logs';
+import ServerMonitoringDAO from '../../db/ServerMonitoringDAO';
+import { hasAtLeastOnePermission, hasPermission, PERMISSIONS } from '../../../../shared/roles';
 
 const INTERVAL_BETWEEN_UPDATES = 1000;
 
@@ -36,16 +38,39 @@ export async function logsOverview(ws: WebSocket, req: Request) {
     return;
   }
 
+  if (!hasAtLeastOnePermission(auth.role, PERMISSIONS.READ_LOG, PERMISSIONS.READ_SERVER)) {
+    ws.send(JSON.stringify({ success: false, error: 'Forbidden' }));
+    ws.close();
+    return;
+  }
+
   // Send initial data
   try {
-    const logsOverviewStatistics = await LogDAO.getLogsOverviewStatistics();
-    const serverStatistics = await getServerStatistics();
+    let logsOverviewStatistics: ({ [key in LogLevel]: number } & { recentLogs: Log[] }) | undefined;
+    let logStatisticsByDay: TransformedData | undefined;
+    let serverStatistics: ServerStatistics | undefined;
+    let serversStatuses:
+      | {
+          server: Server;
+          online: boolean;
+        }[]
+      | undefined;
+    if (hasPermission(auth.role, PERMISSIONS.READ_LOG)) {
+      logsOverviewStatistics = await LogDAO.getLogsOverviewStatistics();
+      logStatisticsByDay = await LogDAO.getLogStatisticsByDay();
+    }
+    if (hasPermission(auth.role, PERMISSIONS.READ_SERVER)) {
+      serverStatistics = await getServerStatistics();
+      serversStatuses = await ServerMonitoringDAO.getServersStatuses();
+    }
     ws.send(
       JSON.stringify({
         action: 'initial',
         success: true,
         logsOverviewStatistics,
-        serverStatistics
+        serverStatistics,
+        logStatisticsByDay,
+        serversStatuses
       })
     );
   } catch (error) {
@@ -61,19 +86,26 @@ export async function logsOverview(ws: WebSocket, req: Request) {
   }
 
   // Send periodic updates
-  const intervalId = setInterval(async () => {
-    const serverStatistics = await getServerStatistics();
+  let intervalId: NodeJS.Timeout | undefined;
+  if (hasPermission(auth.role, PERMISSIONS.READ_SERVER)) {
+    intervalId = setInterval(async () => {
+      const serverStatistics = await getServerStatistics();
 
-    ws.send(JSON.stringify({ action: 'serverStatisticsUpdate', serverStatistics, success: true }));
-  }, INTERVAL_BETWEEN_UPDATES);
+      ws.send(
+        JSON.stringify({ action: 'serverStatisticsUpdate', serverStatistics, success: true })
+      );
+    }, INTERVAL_BETWEEN_UPDATES);
+  }
 
   const logsChanged = async () => {
     try {
       const logsOverviewStatistics = await LogDAO.getLogsOverviewStatistics();
+      const logStatisticsByDay = await LogDAO.getLogStatisticsByDay();
       ws.send(
         JSON.stringify({
           action: 'newLogsReceived',
           logsOverviewStatistics,
+          logStatisticsByDay,
           success: true
         })
       );
@@ -89,10 +121,10 @@ export async function logsOverview(ws: WebSocket, req: Request) {
     }
   };
 
-  logEventEmitter.on('newLogs', logsChanged);
+  if (hasPermission(auth.role, PERMISSIONS.READ_LOG)) logEventEmitter.on('newLogs', logsChanged);
 
   ws.on('close', () => {
-    clearInterval(intervalId);
+    if (intervalId) clearInterval(intervalId);
     logEventEmitter.removeListener('newLogs', logsChanged);
   });
 }

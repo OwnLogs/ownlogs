@@ -5,7 +5,7 @@
   import { enhance } from '$app/forms';
   import { toast } from 'svelte-sonner';
   import { pageMetadata } from '$lib/stores';
-  import { theme } from 'mode-watcher';
+  import { mode } from 'mode-watcher';
   import logInImageDark from '$lib/assets/logInImageDark.jpg?enhanced';
   import logInImageLight from '$lib/assets/logInImageLight.jpg?enhanced';
 
@@ -35,7 +35,7 @@
   {/if}
   <div class="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
     <div class="absolute inset-0">
-      {#if $theme === 'dark'}
+      {#if $mode === 'dark'}
         <enhanced:img src={logInImageDark} alt="" class="size-full object-cover" />
       {:else}
         <enhanced:img src={logInImageLight} alt="" class="size-full object-cover" />

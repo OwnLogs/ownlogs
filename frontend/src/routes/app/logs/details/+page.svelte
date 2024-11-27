@@ -26,12 +26,16 @@
   import { scale } from 'svelte/transition';
   import { backOut } from 'svelte/easing';
   import LogDetailsModal from './LogDetailsModal.svelte';
+  import { hasPermission, PERMISSIONS } from '@shared/roles';
 
   pageMetadata.set({
     title: 'Logs overview',
     description: 'Logs overview analytics about logs.',
     breadcrumbs: [{ name: 'Logs' }, { name: 'Details' }]
   });
+
+  const { data } = $props();
+  const { user } = data;
 
   let logs: Logs = $state({
     logs: [],
@@ -197,23 +201,25 @@
 </script>
 
 <!-- Delete logs confirm modal -->
-<AlertDialog.Root bind:open={deleteLogsConfirmModalVisible}>
-  <AlertDialog.Content>
-    <AlertDialog.Header>
-      <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
-      <AlertDialog.Description>
-        This action cannot be undone. This will permanently delete {table.getFilteredSelectedRowModel()
-          .rows.length} log{table.getFilteredSelectedRowModel().rows.length > 1 ? 's' : ''}.
-      </AlertDialog.Description>
-    </AlertDialog.Header>
-    <AlertDialog.Footer>
-      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <Button disabled={isDeletingLogs} loading={isDeletingLogs} onclick={deleteLogs}
-        >Continue</Button
-      >
-    </AlertDialog.Footer>
-  </AlertDialog.Content>
-</AlertDialog.Root>
+{#if hasPermission(user?.role, PERMISSIONS.DELETE_LOG)}
+  <AlertDialog.Root bind:open={deleteLogsConfirmModalVisible}>
+    <AlertDialog.Content>
+      <AlertDialog.Header>
+        <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+        <AlertDialog.Description>
+          This action cannot be undone. This will permanently delete {table.getFilteredSelectedRowModel()
+            .rows.length} log{table.getFilteredSelectedRowModel().rows.length > 1 ? 's' : ''}.
+        </AlertDialog.Description>
+      </AlertDialog.Header>
+      <AlertDialog.Footer>
+        <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+        <Button disabled={isDeletingLogs} loading={isDeletingLogs} onclick={deleteLogs}
+          >Continue</Button
+        >
+      </AlertDialog.Footer>
+    </AlertDialog.Content>
+  </AlertDialog.Root>
+{/if}
 
 <LogDetailsModal log={selectedLog} />
 
@@ -221,6 +227,7 @@
   <div class="gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
     <!-- Table heading -->
     <div class="flex items-center gap-6 py-4">
+      <!-- Real-time checkbox -->
       <div class="flex items-center space-x-2">
         <Checkbox id="realTimeLogs" checked={realTime} onCheckedChange={realTimeChange} />
         <Label
@@ -230,7 +237,8 @@
           Real-time
         </Label>
       </div>
-      {#if table.getFilteredSelectedRowModel().rows.length > 0}
+      <!-- Delete selected row(s) button -->
+      {#if table.getFilteredSelectedRowModel().rows.length > 0 && hasPermission(user?.role, PERMISSIONS.DELETE_LOG)}
         <div transition:scale={{ duration: 400, easing: backOut, start: 0, opacity: 0 }}>
           <Button
             variant="destructive"
@@ -244,6 +252,7 @@
           </Button>
         </div>
       {/if}
+      <!-- Toggle table column visibility -->
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
           {#snippet child({ props })}

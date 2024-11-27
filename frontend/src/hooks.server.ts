@@ -1,9 +1,69 @@
 import { auth } from '$lib/server/auth';
-import { redirect } from '@sveltejs/kit';
-import { hasAUserRegistered } from '$lib/server/db/user';
+import { error, redirect } from '@sveltejs/kit';
+import { hasAUserRegistered, type User } from '$lib/server/db/user';
 import { urlStartsWith } from '$lib/utils';
+import { hasAtLeastOnePermission, PERMISSIONS as P } from '@shared/roles';
 
 const PROTECTED_ROUTES = ['/app', '/api'];
+
+const routesPermissions: { [key: string]: string | string[] } = {
+  '/': P.ANY,
+  '/log-in': P.ANY,
+  '/register': P.ANY,
+  '/app': P.ANY,
+  '/app/logs': [P.READ_LOG, P.READ_SERVER],
+  '/app/logs/details': [P.READ_LOG, P.DELETE_LOG],
+  '/app/servers': [P.READ_SERVER, P.CREATE_SERVER],
+  '/app/servers/*': [P.READ_SERVER, P.UPDATE_SERVER, P.DELETE_SERVER],
+  '/app/log-out': P.ANY,
+  '/app/account/settings': P.ANY
+};
+
+const canUserNavigateHere = (pathname: string, user: User | undefined): boolean => {
+  const isPathMatching = (path: string, pathExpression: string): boolean => {
+    const pathParts = path.split('/');
+    const pathExpressionParts = pathExpression.split('/');
+    if (pathParts.length !== pathExpressionParts.length) {
+      return false;
+    }
+
+    for (let i = 0; i < pathParts.length; i++) {
+      if (pathExpressionParts[i] !== '*' && pathParts[i] !== pathExpressionParts[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Path is in the list of protected routes and has permission set to ANY
+  if (routesPermissions[pathname] === P.ANY) {
+    return true;
+  }
+
+  // User is not logged in
+  if (!user) {
+    return false;
+  }
+
+  // Check if user has the required permissions to access the route
+  for (const route in routesPermissions) {
+    if (isPathMatching(pathname, route)) {
+      if (routesPermissions[route] === P.ANY) {
+        return true;
+      }
+      if (Array.isArray(routesPermissions[route])) {
+        return hasAtLeastOnePermission(user?.role, ...routesPermissions[route]);
+      }
+
+      if (typeof routesPermissions[route] === 'string') {
+        return hasAtLeastOnePermission(user?.role, routesPermissions[route]);
+      }
+    }
+  }
+
+  return false;
+};
 
 export const handle = async ({ event, resolve }) => {
   const { url, cookies, locals } = event;
@@ -27,12 +87,14 @@ export const handle = async ({ event, resolve }) => {
     }
   }
 
-  // User is not logged in and trying to access a protected route
-  if (urlStartsWith(url.pathname, PROTECTED_ROUTES) && !locals.user) {
-    delete locals.user;
-    locals.token = undefined;
-    cookies.delete('token', { path: '/' });
-    throw redirect(307, '/');
+  // Redirect to login page if user is not logged in and trying to access a protected route
+  if (!locals.user && urlStartsWith(url.pathname, PROTECTED_ROUTES)) {
+    throw redirect(307, '/log-in');
+  }
+
+  // Check if user has sufficient permissions to access the requested route
+  if (!canUserNavigateHere(url.pathname, locals.user)) {
+    throw error(403, 'Forbidden');
   }
 
   const hasARegisteredUser = await hasAUserRegistered();

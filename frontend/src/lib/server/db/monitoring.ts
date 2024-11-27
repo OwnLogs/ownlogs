@@ -1,28 +1,35 @@
 import db from '.';
-import type { ServerMonitoring } from '@shared/types';
 
 export async function findServerMonitoringByServerId(
-  serverId: number,
-  start: Date = new Date(0),
-  end: Date = new Date()
-): Promise<ServerMonitoring[]> {
+  serverId: number
+): Promise<{ day: Date; errors: { message: string; timestamp: Date }[]; duration: number }[]> {
   if (!serverId) {
     return [];
   }
   try {
     const sql = `
-      SELECT *
+      SELECT DATE(timestamp) as day,
+         JSON_ARRAYAGG(JSON_OBJECT('message', error, 'timestamp', timestamp)) as errors,
+         AVG(duration) as duration
       FROM serverMonitoring
       WHERE serverId = ?
-
-      ${start ? 'AND timestamp >= ?' : ''}
-      ${end ? 'AND timestamp <= ?' : ''}
+      AND timestamp >= CURDATE() - INTERVAL 90 DAY
+      GROUP BY day;
     `;
-    const [rows] = await db.query(sql, [serverId, start, end]);
+    const [rows] = await db.query(sql, [serverId]);
+
     if (!rows) {
       return [];
     }
-    return rows as unknown as ServerMonitoring[];
+    const typedTows = rows as unknown as {
+      day: Date;
+      errors: { message: string; timestamp: Date }[];
+      duration: number;
+    }[];
+    typedTows.forEach((row) => {
+      row.errors = row.errors.filter((error) => error.message !== null);
+    });
+    return typedTows;
   } catch (error) {
     console.error('Error getting server surveillance by serverId:', error);
     return [];

@@ -16,7 +16,7 @@ export const actions: Actions = {
     };
 
     // Validate email
-    if(!isEmailValid(email))
+    if (!isEmailValid(email))
       return fail(400, {
         error: true,
         message: 'Invalid email!'

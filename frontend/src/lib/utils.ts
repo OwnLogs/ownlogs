@@ -32,4 +32,4 @@ export function urlStartsWith(url: string, path: string | string[]): boolean {
 
 export const isEmailValid = (email: string): boolean => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+};

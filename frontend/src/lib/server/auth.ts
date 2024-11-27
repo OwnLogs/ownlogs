@@ -5,7 +5,7 @@ import { findUserByUsername, type User } from './db/user';
 /**
  * Authenticates a user based on the provided JWT token.
  */
-async function  auth(token: string): Promise<User | null> {
+async function auth(token: string): Promise<User | null> {
   return new Promise((resolve, reject) => {
     if (!token) reject({ error: 'No token was provided!' });
     try {

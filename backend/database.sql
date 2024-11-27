@@ -42,11 +42,12 @@ CREATE TABLE IF NOT EXISTS `logs` (
   FOREIGN KEY (serverId) REFERENCES server(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- Server monitoring table
-CREATE TABLE IF NOT EXISTS `serverMonitoring` (
-  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE `serverMonitoring` (
+  `id` int NOT NULL,
   `serverId` int NOT NULL,
-  `isOnline` BOOLEAN NOT NULL DEFAULT true,
-  FOREIGN KEY (serverId) REFERENCES server(id)
+  `duration` float NOT NULL,
+  `error` varchar(255) DEFAULT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- Emailing table
 CREATE TABLE IF NOT EXISTS `emailing` (

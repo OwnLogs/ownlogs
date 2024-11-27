@@ -8,5 +8,6 @@ export const dbConfig = {
   connectionLimit: 10,
   waitForConnections: true,
   debug: false,
-  multipleStatements: true
+  multipleStatements: true,
+  timezone: 'Z'
 };

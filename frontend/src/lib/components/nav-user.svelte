@@ -29,7 +29,7 @@
             </div>
             <div class="grid flex-1 text-left text-sm leading-tight">
               <span class="truncate font-semibold">{user.username}</span>
-              <!-- <span class="truncate text-xs">{user.email}</span> -->
+              <span class="truncate text-xs text-muted-foreground">{user.email}</span>
             </div>
             <ChevronsUpDown class="ml-auto size-4" />
           </Sidebar.MenuButton>

@@ -16,8 +16,5 @@ export function createdServer(req: Request, res: Response) {
 
   knownServerIdsCache.add(serverId);
 
-  console.log('Server created:', serverId);
-  console.log('Known servers:', knownServerIdsCache.get());
-
   res.status(200).send({ status: 'success' });
 }

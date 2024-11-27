@@ -12,6 +12,7 @@ import {
 import { generateAccessToken } from '$lib/server/auth';
 import bcrypt from 'bcryptjs';
 import { isEmailValid } from '$lib/utils';
+import { hasPermission, PERMISSIONS } from '@shared/roles';
 
 export const load = (async () => {
   const allUsers = await getAllUsers();
@@ -85,7 +86,11 @@ export const actions: Actions = {
           action: 'updateUsername'
         });
 
-      await updateUser(locals.user.id, { username, email, role: locals.user.role } as { username: string; email: string; role: User['role'] });
+      await updateUser(locals.user.id, { username, email, role: locals.user.role } as {
+        username: string;
+        email: string;
+        role: User['role'];
+      });
       cookies.set('token', generateAccessToken(username), {
         path: '/',
         maxAge: 60 * 60 * 24,
@@ -150,7 +155,10 @@ export const actions: Actions = {
       return fail(400, { error: true, message: 'An error occurred!', action: 'updatePassword' });
     }
   },
-  async createGuestAccount({ request }) {
+  async createGuestAccount({ request, locals: { user } }) {
+    if (!hasPermission(user?.role, PERMISSIONS.CREATE_OTHER_ACCOUNTS)) {
+      return fail(403, { error: true, message: 'Forbidden', action: 'createGuestAccount' });
+    }
     const formData = Object.fromEntries(await request.formData());
     const { username, email, password, role } = formData as {
       username: string;
@@ -234,6 +242,9 @@ export const actions: Actions = {
     };
   },
   async deleteUserAccount({ request, locals }) {
+    if (!hasPermission(locals.user?.role, PERMISSIONS.DELETE_OTHER_ACCOUNTS)) {
+      return fail(403, { error: true, message: 'Forbidden', action: 'deleteUserAccount' });
+    }
     const formData = Object.fromEntries(await request.formData());
     const userId = parseInt(formData?.userId as string);
 
@@ -276,6 +287,9 @@ export const actions: Actions = {
     }
   },
   async editUserAccount({ request, locals }) {
+    if (!hasPermission(locals.user?.role, PERMISSIONS.UPDATE_OTHER_ACCOUNTS)) {
+      return fail(403, { error: true, message: 'Forbidden', action: 'editUserAccount' });
+    }
     const formData = Object.fromEntries(await request.formData());
 
     const { userId, username, email, role } = formData as {

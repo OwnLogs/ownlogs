@@ -16,5 +16,5 @@ export function runLoggerTest() {
     (i: number) => logger.fatal(message + ' ' + i)
   ];
 
-  for (let i = 0; i < 1; i++) actions[4](i);
+  for (let i = 0; i < 10; i++) actions[Math.floor(Math.random() * actions.length)](i);
 }

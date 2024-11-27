@@ -183,6 +183,7 @@ declare module '$env/static/private' {
 	export const LC_NUMERIC: string;
 	export const STARSHIP_SESSION_KEY: string;
 	export const npm_package_devDependencies__sveltejs_enhanced_img: string;
+	export const npm_package_dependencies_date_fns: string;
 	export const npm_command: string;
 	export const PNPM_SCRIPT_SRC_DIR: string;
 	export const LC_PAPER: string;
@@ -386,6 +387,7 @@ declare module '$env/dynamic/private' {
 		LC_NUMERIC: string;
 		STARSHIP_SESSION_KEY: string;
 		npm_package_devDependencies__sveltejs_enhanced_img: string;
+		npm_package_dependencies_date_fns: string;
 		npm_command: string;
 		PNPM_SCRIPT_SRC_DIR: string;
 		LC_PAPER: string;

@@ -70,6 +70,37 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[hsl(var(--sidebar-background))] text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+}
+
+/* Media query for dark mode */
+@media (prefers-color-scheme: dark) {
+  .dark .apexcharts-text {
+    @apply fill-primary;
+  }
+
+  .dark .apexcharts-tooltip,
+  .dark .apexcharts-tooltip-title {
+    @apply rounded-lg !border-border !bg-card !text-primary;
+  }
+
+  .dark .apexcharts-legend-text {
+    @apply !text-primary;
   }
 }

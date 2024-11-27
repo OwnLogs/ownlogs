@@ -5,6 +5,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { formSchema } from './schema';
 import { createServer } from '$lib/server/db/server';
 import { API_URL } from '$lib/constants';
+import { hasPermission, PERMISSIONS } from '@shared/roles.js';
 
 export const load: PageServerLoad = async () => {
   return {
@@ -14,6 +15,12 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
   createServer: async (event) => {
+    if (!hasPermission(event.locals?.user?.role, PERMISSIONS.CREATE_SERVER)) {
+      return fail(403, {
+        error: true,
+        message: 'You do not have permission to create a server'
+      });
+    }
     const form = await superValidate(event, zod(formSchema));
     if (!form.valid) {
       return fail(400, {

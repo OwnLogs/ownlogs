@@ -1,8 +1,54 @@
 import DB from '.';
 import { format } from 'date-fns';
-import { IncomingLog, type Log, type LogLevel } from '@shared/types';
+import { IncomingLog, type Log, type LogLevel } from '../../../shared/types';
 import { sendEmail } from '../SMTP';
 import UserDAO from './UserDAO';
+
+type LogEntry = {
+  date: Date;
+  name: string;
+  count: number;
+};
+
+export type TransformedData = {
+  series: { name: string; data: number[] }[];
+  categories: string[];
+};
+
+function transformData(data: LogEntry[]): TransformedData {
+  const datesSet: Set<string> = new Set();
+  const nameMap: Map<string, Map<string, number>> = new Map();
+
+  // Organize data into a map of names and dates
+  data.forEach((entry) => {
+    const date = entry.date.toISOString().split('T')[0];
+
+    datesSet.add(date);
+
+    if (!nameMap.has(entry.name)) {
+      nameMap.set(entry.name, new Map());
+    }
+
+    const dateCounts = nameMap.get(entry.name)!;
+    dateCounts.set(date, (dateCounts.get(date) || 0) + entry.count);
+  });
+
+  // Sort dates
+  const categories = Array.from(datesSet).sort();
+
+  // Build the series data
+  const series = Array.from(nameMap.entries()).map(([name, dateCounts]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    data: categories.map((date) => dateCounts.get(date) || 0) // Fill gaps with 0
+  }));
+  const seriesNameOrder = ['debug', 'info', 'warn', 'error', 'fatal'];
+  series.sort((a, b) => seriesNameOrder.indexOf(a.name) - seriesNameOrder.indexOf(b.name));
+
+  return {
+    series,
+    categories
+  };
+}
 
 class LogDAO {
   async insertLogs(logs: Log[]): Promise<Log[]> {
@@ -156,6 +202,27 @@ class LogDAO {
     `;
     const rows = await DB.query<any[]>(sql);
     return rows.map((row) => row.id);
+  }
+
+  async getLogStatisticsByDay(): Promise<TransformedData> {
+    const sql = `
+      SELECT
+      DATE(timestamp) AS date,
+      level AS name,
+      COUNT(*) AS count
+      FROM
+      logs
+      WHERE
+      timestamp >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+      GROUP BY
+      DATE(timestamp),
+      level
+      ORDER BY
+      DATE(timestamp),
+      level;
+    `;
+    const rows = await DB.query<any[]>(sql);
+    return transformData(rows as LogEntry[]);
   }
 }
 
