@@ -1,8 +1,17 @@
 import { Request, Response } from 'express';
 import { knownServerIdsCache } from '../../index';
+import { authenticate, storeUnauthenticatedRequest } from '../../auth';
 
-export function deletedServer(req: Request, res: Response) {
+export async function deletedServer(req: Request, res: Response) {
   const serverId = req.body.serverId;
+  const token = req.cookies['token'];
+  const auth = await authenticate(token);
+
+  if (!auth) {
+    await storeUnauthenticatedRequest();
+    res.status(401).send({ status: 'error', message: 'Unauthorized' });
+    return;
+  }
 
   if (!serverId) {
     res.status(400).send({ status: 'error', message: 'serverId is required' });

@@ -26,6 +26,11 @@
             title: 'Details',
             url: '/app/logs/details',
             permissions: [PERMISSIONS.READ_LOG]
+          },
+          {
+            title: 'Querying',
+            url: '/app/logs/querying',
+            permissions: [PERMISSIONS.READ_LOG]
           }
         ]
       },

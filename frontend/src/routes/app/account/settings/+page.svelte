@@ -16,7 +16,7 @@
   import * as Sheet from '$lib/components/ui/sheet/index.js';
   import * as Drawer from '$lib/components/ui/drawer/index.js';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import { hasPermission, hasAtLeastOnePermission, PERMISSIONS } from '@shared/roles';
+  import { hasPermission, hasAtLeastOnePermission, PERMISSIONS, ROLES } from '@shared/roles';
   import { Ellipsis, Pencil, Trash2 } from 'lucide-svelte';
 
   pageMetadata.set({
@@ -474,16 +474,17 @@
                 {:else}
                   <div class="grid gap-4 md:grid-cols-2">
                     {#each allUsers as u}
-                      {@const isOwner = user?.id === u.id}
                       <!-- If the displayed user is the owner -->
                       <Card.Root>
                         <Card.Header class="p-6">
                           <div class="flex flex-row items-center justify-between">
                             <div class="flex flex-col gap-2">
-                              <Card.Title>{u.username} {isOwner ? '(You)' : ''}</Card.Title>
+                              <Card.Title
+                                >{u.username} {user?.id === u.id ? '(You)' : ''}</Card.Title
+                              >
                               <Card.Description>{u.role}</Card.Description>
                             </div>
-                            {#if !isOwner && hasAtLeastOnePermission(user?.role, PERMISSIONS.UPDATE_OTHER_ACCOUNTS, PERMISSIONS.DELETE_OTHER_ACCOUNTS)}
+                            {#if u?.role !== ROLES.OWNER && hasAtLeastOnePermission(user?.role, PERMISSIONS.UPDATE_OTHER_ACCOUNTS, PERMISSIONS.DELETE_OTHER_ACCOUNTS)}
                               <DropdownMenu.Root>
                                 <DropdownMenu.Trigger>
                                   <Ellipsis class="size-6 text-muted-foreground" />

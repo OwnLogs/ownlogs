@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import WebSocket from 'ws';
-import { Log } from '../../../../shared/types';
 import { authenticate, storeUnauthenticatedRequest } from '../../auth';
 import LogDAO from '../../db/LogDAO';
 import Logger from '../../logger';

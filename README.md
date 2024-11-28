@@ -31,7 +31,25 @@ To run the project, just run `./run.sh`.
  - [x] Make graphs of received logs
  - [x] Make a logo
  - [x] Add email alerts
- - [ ] Add authentication on the post routes in the backend
+ - [x] Add authentication on the post routes in the backend
+ - [ ] Database querying
+   - [x] Make the page
+   - [x] Add a text field for user input
+   - [x] Add a results table
+   - [x] Add a database structure graph
+   - [ ] Add a warning when fetching a large number of rows
+   - [x] Make the layout resizeable
+   - [ ] Add query history in localStorage
+   - [ ] Add text highlighting like in an IDE to the text input
+   - [ ] Add pagination if necessary
+   - [ ] Add error highlighting in the textfield when an error occurs with the query
+   - [x] Make the page responsive
+ - [ ] Homepage
+   - [x] Add hero
+   - [ ] Add bento
+   - [ ] Add footer
+   - [x] Add a navbar
+ - [ ] Add a way to select logs and analyse them with a SQL like query and a visual thing like PhpMyAdmin
  - [x] Server monitoring
    - [x] Add periodic server check and insert status in a new table to then display analytics
    - [x] Add editing to the server on the frontend
@@ -39,5 +57,5 @@ To run the project, just run `./run.sh`.
    - [x] Make a servers list page
    - [x] Make a single server page
    - [x] Change edit server modal into a Sheet (Side modal)
- - [ ] Roles
-   - [ ] Add permission management
+ - [x] Roles
+   - [x] Add permission management

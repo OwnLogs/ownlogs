@@ -1,6 +1,5 @@
 <script lang="ts">
   import '../app.css';
-  import { ModeWatcher } from 'mode-watcher';
   import { Toaster } from '$lib/components/ui/sonner/index.js';
   import { pageMetadata } from '$lib/stores';
   import { page } from '$app/stores';
@@ -41,7 +40,6 @@
   {/if}
 </svelte:head>
 
-<ModeWatcher />
 <Toaster />
 
 {@render children?.()}

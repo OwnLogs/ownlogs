@@ -1,10 +1,11 @@
 import { fontFamily } from 'tailwindcss/defaultTheme';
+import plugin from 'tailwindcss/plugin';
 import type { Config } from 'tailwindcss';
 import tailwindcssAnimate from 'tailwindcss-animate';
 
 const config: Config = {
   darkMode: ['class'],
-  content: ['./src/**/*.{html,js,svelte,ts}', './node_modules/layerchart/**/*.{svelte,js}'],
+  content: ['./src/**/*.{html,js,svelte,ts}'],
   safelist: ['dark'],
   theme: {
     container: {
@@ -91,7 +92,19 @@ const config: Config = {
       }
     }
   },
-  plugins: [tailwindcssAnimate]
+  plugins: [
+    tailwindcssAnimate,
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        '.text-wrap-none': {
+          textWrap: 'none'
+        },
+        '.text-wrap-balance': {
+          textWrap: 'balance'
+        }
+      });
+    })
+  ]
 };
 
 export default config;
