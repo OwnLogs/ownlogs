@@ -17,7 +17,8 @@ const routesPermissions: { [key: string]: string | string[] } = {
   '/app/servers': [P.READ_SERVER, P.CREATE_SERVER],
   '/app/servers/*': [P.READ_SERVER, P.UPDATE_SERVER, P.DELETE_SERVER],
   '/app/log-out': P.ANY,
-  '/app/account/settings': P.ANY
+  '/app/account/settings': P.ANY,
+  '/api/logs/query': P.READ_LOG
 };
 
 const canUserNavigateHere = (pathname: string, user: User | undefined): boolean => {

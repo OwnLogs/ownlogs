@@ -32,17 +32,17 @@ To run the project, just run `./run.sh`.
  - [x] Make a logo
  - [x] Add email alerts
  - [x] Add authentication on the post routes in the backend
- - [ ] Database querying
+ - [x] Database querying
    - [x] Make the page
    - [x] Add a text field for user input
    - [x] Add a results table
    - [x] Add a database structure graph
-   - [ ] Add a warning when fetching a large number of rows
+   - [x] ~~Add a warning when fetching a large number of rows~~
    - [x] Make the layout resizeable
-   - [ ] Add query history in localStorage
-   - [ ] Add text highlighting like in an IDE to the text input
-   - [ ] Add pagination if necessary
-   - [ ] Add error highlighting in the textfield when an error occurs with the query
+   - [x] Add query history in localStorage
+   - [x] Add text highlighting like in an IDE to the text input
+   - [x] Add pagination if necessary
+   - [x] ~~Add error highlighting in the textfield when an error occurs with the query~~
    - [x] Make the page responsive
  - [ ] Homepage
    - [x] Add hero
