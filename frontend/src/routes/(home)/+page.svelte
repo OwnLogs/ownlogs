@@ -2,6 +2,7 @@
   import Bento from './Bento.svelte';
   import { pageMetadata } from '$lib/stores';
   import { Button } from '$lib/components/ui/button';
+  import Footer from './Footer.svelte';
 
   pageMetadata.set({
     title: 'Home',
@@ -37,9 +38,6 @@
 
     <Bento />
 
-    <div class="h-screen"></div>
-
-    <!-- Footer -->
-    <footer class="rounded-2xl bg-primary px-8 py-24"></footer>
+    <Footer {hasARegisteredUser} />
   </main>
 </div>

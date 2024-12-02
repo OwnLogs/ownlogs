@@ -53,30 +53,39 @@ function addLimitToQuery(query: string, limit: number, offset: number): string {
 }
 
 export const POST: RequestHandler = async ({ request }) => {
-  const { query, lastQueryValue, currentPage = 0 } = await request.json();
+  const { query, lastQueryValue = query, currentPage = 0, all = false } = await request.json();
   const NUMBER_OF_RESULTS_PER_PAGE = 50;
   const pageNumber = lastQueryValue === query ? currentPage : 0;
 
   try {
     const sanitizedQuery = sanitizeSQLQuery(query);
-    const limitedQuery = addLimitToQuery(
-      sanitizedQuery,
-      NUMBER_OF_RESULTS_PER_PAGE,
-      pageNumber * NUMBER_OF_RESULTS_PER_PAGE
-    );
-    const [rows] = await db.execute(limitedQuery);
-    const [numberOfResults] = await db.execute(
-      `SELECT COUNT(*) AS count FROM (${sanitizedQuery}) AS subquery`
-    );
-    const numberOfPages = Math.ceil(numberOfResults[0].count / NUMBER_OF_RESULTS_PER_PAGE);
+    if (all) {
+      const [rows] = await db.execute(sanitizedQuery);
+      return json({
+        success: true,
+        message: 'Query ran successfully',
+        rows
+      });
+    } else {
+      const limitedQuery = addLimitToQuery(
+        sanitizedQuery,
+        NUMBER_OF_RESULTS_PER_PAGE,
+        pageNumber * NUMBER_OF_RESULTS_PER_PAGE
+      );
+      const [rows] = await db.execute(limitedQuery);
+      const [numberOfResults] = await db.execute(
+        `SELECT COUNT(*) AS count FROM (${sanitizedQuery}) AS subquery`
+      );
+      const numberOfPages = Math.ceil(numberOfResults[0].count / NUMBER_OF_RESULTS_PER_PAGE);
 
-    return json({
-      success: true,
-      message: 'Query ran successfully',
-      rows,
-      numberOfPages,
-      currentPage: pageNumber
-    });
+      return json({
+        success: true,
+        message: 'Query ran successfully',
+        rows,
+        numberOfPages,
+        currentPage: pageNumber
+      });
+    }
   } catch (error: unknown) {
     if (error instanceof Error) {
       return json({ error: true, message: error.message, numberOfPages: 0, currentPage: 0 });

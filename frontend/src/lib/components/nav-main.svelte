@@ -6,6 +6,7 @@
   import { urlStartsWith } from '$lib/utils';
   import { hasAtLeastOnePermission } from '@shared/roles';
   import type { User } from '$lib/server/db/user';
+  import { cn } from '$lib/utils';
 
   let {
     items,
@@ -22,6 +23,7 @@
         title: string;
         url: string;
         permissions: string[];
+        icon: any;
       }[];
     }[];
     user: User;
@@ -59,9 +61,21 @@
                 <Collapsible.Content>
                   <Sidebar.MenuSub>
                     {#each mainItem.items as subItem (subItem.title)}
+                      {@const isActive = $page.url.pathname === subItem.url}
                       <Sidebar.MenuSubItem>
                         <Sidebar.MenuSubButton href={subItem.url}>
-                          <span>{subItem.title}</span>
+                          {#if subItem.icon}
+                            <subItem.icon />
+                          {/if}
+                          <span
+                            class={cn(
+                              subItem.icon
+                                ? isActive
+                                  ? 'text-primary'
+                                  : 'text-muted-foreground'
+                                : 'text-primary'
+                            )}>{subItem.title}</span
+                          >
                         </Sidebar.MenuSubButton>
                       </Sidebar.MenuSubItem>
                     {/each}

@@ -1,7 +1,15 @@
 <script lang="ts">
   import { type LogLevel } from '@shared/types';
+  import { cn } from '$lib/utils';
 
-  const { level }: { level: LogLevel } = $props();
+  const {
+    level,
+    class: className,
+    ...restProps
+  }: {
+    level: LogLevel;
+    class?: string;
+  } = $props();
 
   const levelClasses = {
     debug: 'text-background dark:text-foreground bg-gray-600 dark:bg-gray-600',
@@ -12,6 +20,13 @@
   };
 </script>
 
-<span class="rounded-full px-2 py-1 text-xs font-semibold uppercase {levelClasses[level]}">
+<span
+  class={cn(
+    'rounded-full px-2 py-1 text-xs font-semibold uppercase',
+    levelClasses[level],
+    className
+  )}
+  {...restProps}
+>
   {level}
 </span>

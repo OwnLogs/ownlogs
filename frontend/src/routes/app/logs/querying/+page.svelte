@@ -1,5 +1,6 @@
 <script lang="ts">
   import { pageMetadata } from '$lib/stores';
+  import { onMount } from 'svelte';
   import { MediaQuery } from 'runed';
   import { Play, LoaderCircle, OctagonAlert, ChevronLeft, ChevronRight } from 'lucide-svelte';
   import Editor from './Editor.svelte';
@@ -9,7 +10,10 @@
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as Drawer from '$lib/components/ui/drawer/index.js';
   import * as Alert from '$lib/components/ui/alert/index.js';
-  import { onMount } from 'svelte';
+  import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
+  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
+  import { Label } from '$lib/components/ui/label/index.js';
+  import { toast } from 'svelte-sonner';
 
   pageMetadata.set({
     title: 'Querying',
@@ -33,6 +37,11 @@
   let requestsHistory: { req: string; timestamp: Date }[] = $state([]);
   let useQueryFromHistoryConfirmModal = $state({ visible: false, value: '' });
   let mobileHistoryModalVisible: boolean = $state(false);
+  let exportLogsModalOpen = $state(false);
+  const availableExportFormat = ['JSON', 'CSV'];
+  let exportLogsFormat: string = $state('');
+  let exportLogsAmount: 'all' | 'current' = $state('current');
+  let isExporting = $state(false);
 
   async function runQuery() {
     isQuerying = true;
@@ -87,14 +96,14 @@
   }
 
   function getRequestsHistory() {
-    return JSON.parse(localStorage.getItem('requestsHistory') || '[]')
-      .map((e) => {
+    return JSON.parse(localStorage.getItem('requestsHistory') || '[]').map(
+      (e: { req: string; timestamp: Date }) => {
         return {
           ...e,
           timestamp: new Date(e.timestamp)
         };
-      })
-      .reverse();
+      }
+    );
   }
 
   function setRequestHistory() {
@@ -108,6 +117,7 @@
     requestsHistory = getRequestsHistory();
     if (requestsHistory.length > 0) {
       queryInputValue = requestsHistory[0].req;
+      lastQueryValue = requestsHistory[0].req;
     }
   });
 
@@ -131,8 +141,112 @@
     const match = error.match(/line (\d+)/);
     return match ? parseInt(match[1]) : null;
   };
+
+  async function exportQueryResults() {
+    const filename = 'logify-results';
+    isExporting = true;
+    let dataToExport = rows;
+    if (exportLogsAmount === 'all') {
+      const res = await fetch('/api/logs/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query: queryInputValue, all: true })
+      });
+      if (!res.ok) {
+        toast.error('An error occurred while fetching the data');
+        return;
+      }
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.message);
+        return;
+      }
+      dataToExport = data.rows;
+    }
+    const exportCSV = () => {
+      const data = [columns, ...dataToExport.map((row) => columns.map((column) => row[column]))];
+      const csv = data.map((row) => row.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+    const exportJSON = () => {
+      const data = JSON.stringify(dataToExport, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+    switch (exportLogsFormat) {
+      case 'JSON':
+        exportJSON();
+        break;
+      case 'CSV':
+        exportCSV();
+        break;
+      default:
+        toast.error('Unknown export format');
+        break;
+    }
+    isExporting = false;
+  }
 </script>
 
+<!-- Export logs modal -->
+<Dialog.Root bind:open={exportLogsModalOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>Export logs</Dialog.Title>
+      <Dialog.Description>
+        Export logs in your favorite format: {availableExportFormat.join(', ')}.
+      </Dialog.Description>
+    </Dialog.Header>
+    <div class="flex flex-col">
+      <h2 class="text-base font-semibold">Amount</h2>
+      <RadioGroup.Root bind:value={exportLogsAmount}>
+        <div class="flex flex-row items-center gap-2">
+          <RadioGroup.Item value="current" id="export-current" />
+          <Label for="export-current" class="text-sm">Current</Label>
+        </div>
+        <div class="flex flex-row items-center gap-2">
+          <RadioGroup.Item value="all" id="export-all" />
+          <Label for="export-all" class="text-sm">All</Label>
+        </div>
+      </RadioGroup.Root>
+      <h2 class="mt-4 text-base font-semibold">Format</h2>
+      <RadioGroup.Root bind:value={exportLogsFormat}>
+        {#each availableExportFormat as format}
+          <div class="flex flex-row items-center gap-2">
+            <RadioGroup.Item value={format} id="export-{format}" />
+            <Label for="export-{format}" class="text-sm">
+              {format}
+            </Label>
+          </div>
+        {/each}
+      </RadioGroup.Root>
+    </div>
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => (exportLogsModalOpen = false)}>Cancel</Button>
+      <Button
+        variant="default"
+        disabled={!exportLogsFormat || isExporting}
+        loading={isExporting}
+        onclick={exportQueryResults}>Export</Button
+      >
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Database structure modal -->
 <Dialog.Root
   bind:open={databaseStructureModalVisible}
   onOpenChange={(e) => {
@@ -242,6 +356,7 @@
     defaultSize={30}
     minSize={20}
   >
+    <!-- Upper part -->
     <Resizable.PaneGroup direction="horizontal">
       <!-- Query input -->
       <Resizable.Pane defaultSize={70} minSize={30}>
@@ -333,29 +448,34 @@
           </Table.Body>
         </Table.Root>
         <!-- Table footer -->
-        <div class="flex flex-row items-center justify-end gap-6">
-          <!-- Current page index / Total pages -->
-          <span class="text-sm font-semibold">
-            Page {currentPage + 1} / {numberOfPages}
-          </span>
-          <!-- Pagination buttons -->
-          <div class="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              class="aspect-square size-8 p-1"
-              onclick={previousPage}
-              disabled={currentPage === 0 || isQuerying}
-            >
-              <ChevronLeft class="size-full" />
-            </Button>
-            <Button
-              variant="outline"
-              class="aspect-square size-8 p-1"
-              onclick={nextPage}
-              disabled={currentPage >= numberOfPages - 1 || isQuerying}
-            >
-              <ChevronRight class="size-full" />
-            </Button>
+        <div class="mt-2 flex flex-row items-center justify-between gap-6">
+          <div class="flex flex-row items-center">
+            <Button size="sm" onclick={() => (exportLogsModalOpen = true)}>Export</Button>
+          </div>
+          <div class="items-cente flex flex-row gap-6">
+            <!-- Current page index / Total pages -->
+            <span class="text-sm font-semibold">
+              Page {currentPage + 1} / {numberOfPages}
+            </span>
+            <!-- Pagination buttons -->
+            <div class="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                class="aspect-square size-8 p-1"
+                onclick={previousPage}
+                disabled={currentPage === 0 || isQuerying}
+              >
+                <ChevronLeft class="size-full" />
+              </Button>
+              <Button
+                variant="outline"
+                class="aspect-square size-8 p-1"
+                onclick={nextPage}
+                disabled={currentPage >= numberOfPages - 1 || isQuerying}
+              >
+                <ChevronRight class="size-full" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

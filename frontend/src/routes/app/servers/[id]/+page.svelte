@@ -18,8 +18,8 @@
   import { Checkbox } from '$lib/components/ui/checkbox/index.js';
   import { hasAtLeastOnePermission, hasPermission, PERMISSIONS } from '@shared/roles';
 
-  const { data, form } = $props();
-  const { server, monitoring, mailingEnabled, user } = data;
+  let { data, form } = $props();
+  let { server, monitoring, mailingEnabled, user } = data;
   const isDesktop = new MediaQuery('(min-width: 768px)');
 
   let deleteServerModalOpen: boolean = $state(false);

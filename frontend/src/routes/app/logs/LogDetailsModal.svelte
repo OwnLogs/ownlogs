@@ -4,8 +4,11 @@
   import * as Table from '$lib/components/ui/table/index.js';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
   import { MediaQuery } from 'runed';
+  import { columnsPrettyNames } from './columns';
+  import type { ColumnsPrettyNames } from './columns';
+  import type { Log } from '@shared/types';
 
-  let { log }: { log: Record<string, any> | null } = $props();
+  let { log }: { log: Log | null } = $props();
 
   let isOpen: boolean = $state(false);
 
@@ -38,12 +41,12 @@
         <Table.Body>
           {#if log}
             {#each Object.entries(log) as [key, value]}
-              {#if value !== null && value !== undefined && value !== ''}
-                <Table.Row>
-                  <Table.Cell class="font-medium">{key}</Table.Cell>
-                  <Table.Cell>{value}</Table.Cell>
-                </Table.Row>
-              {/if}
+              <Table.Row>
+                <Table.Cell class="font-medium"
+                  >{columnsPrettyNames[key as keyof ColumnsPrettyNames]}</Table.Cell
+                >
+                <Table.Cell>{value}</Table.Cell>
+              </Table.Row>
             {/each}
           {/if}
         </Table.Body>
@@ -69,12 +72,12 @@
           <Table.Body>
             {#if log}
               {#each Object.entries(log) as [key, value]}
-                {#if value !== null && value !== undefined && value !== ''}
-                  <Table.Row>
-                    <Table.Cell class="font-medium">{key}</Table.Cell>
-                    <Table.Cell>{value}</Table.Cell>
-                  </Table.Row>
-                {/if}
+                <Table.Row>
+                  <Table.Cell class="font-medium"
+                    >{columnsPrettyNames[key as keyof ColumnsPrettyNames]}</Table.Cell
+                  >
+                  <Table.Cell>{value}</Table.Cell>
+                </Table.Row>
               {/each}
             {/if}
           </Table.Body>

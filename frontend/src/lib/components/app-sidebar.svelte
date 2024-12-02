@@ -2,7 +2,7 @@
   import NavMain from '$lib/components/nav-main.svelte';
   import NavUser from '$lib/components/nav-user.svelte';
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-  import { ChartArea, Server as ServerIcon } from 'lucide-svelte';
+  import { ChartArea, Server as ServerIcon, Search, Database, ListCollapse } from 'lucide-svelte';
   import { type Server } from '@shared/types';
   import { mode } from 'mode-watcher';
   import { PERMISSIONS } from '@shared/roles';
@@ -20,17 +20,26 @@
           {
             title: 'Overview',
             url: '/app/logs',
-            permissions: [PERMISSIONS.READ_LOG]
+            permissions: [PERMISSIONS.READ_LOG],
+            icon: ChartArea
           },
           {
             title: 'Details',
             url: '/app/logs/details',
-            permissions: [PERMISSIONS.READ_LOG]
+            permissions: [PERMISSIONS.READ_LOG],
+            icon: ListCollapse
           },
           {
             title: 'Querying',
             url: '/app/logs/querying',
-            permissions: [PERMISSIONS.READ_LOG]
+            permissions: [PERMISSIONS.READ_LOG],
+            icon: Database
+          },
+          {
+            title: 'Search',
+            url: '/app/logs/search',
+            permissions: [PERMISSIONS.READ_LOG],
+            icon: Search
           }
         ]
       },

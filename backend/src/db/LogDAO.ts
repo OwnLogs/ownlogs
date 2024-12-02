@@ -84,7 +84,13 @@ class LogDAO {
     `;
     const formattedTimestamp = format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss');
 
-    const params = [log.level, log.message, formattedTimestamp, log.source, log.serverId];
+    const params = [
+      log.level,
+      log.message,
+      formattedTimestamp,
+      log.source || 'unknown',
+      log.serverId
+    ];
     const insertId = await DB.execute(sql, params);
     (log as Log).logId = insertId;
     return log as Log;
@@ -153,6 +159,18 @@ class LogDAO {
       return true;
     } catch (error) {
       console.error('Error deleting log:', error);
+      return false;
+    }
+  }
+
+  async deleteLogs(ids: number[]): Promise<boolean> {
+    try {
+      for (const id of ids) {
+        await this.deleteLog(id);
+      }
+      return true;
+    } catch (error) {
+      console.error('Error deleting logs:', error);
       return false;
     }
   }

@@ -16,6 +16,7 @@ import { createdServer } from './routes/post/createdServer';
 import { logs } from './routes/ws/logs';
 import { logsOverview } from './routes/ws/logsOverview';
 import { getBackendConfig } from '../../shared/configs';
+import { deleteLog } from './routes/post/deleteLogs';
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -85,6 +86,7 @@ app.use('/ws', router);
 // /api routes
 router.post('/deletedServer', deletedServer);
 router.post('/createdServer', createdServer);
+router.post('/deletedLogs', deleteLog);
 app.use('/api', router);
 
 // Receiving logs

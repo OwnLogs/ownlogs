@@ -1,17 +1,10 @@
 import type { Log } from '@shared/types';
 import { renderComponent, renderSnippet } from '$lib/components/ui/data-table/index.js';
 import type { ColumnDef } from '@tanstack/table-core';
-import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import { createRawSnippet } from 'svelte';
 import { formatTimestamp } from '$lib/utils';
+import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 import LogLevel from '$lib/components/LogLevel.svelte';
-
-export interface Logs {
-  logs: Log[];
-  totalLogs: number;
-  page: number;
-  pageSize: number;
-}
 
 export const columns: ColumnDef<Log>[] = [
   {
@@ -89,3 +82,19 @@ export const columns: ColumnDef<Log>[] = [
     header: 'Message'
   }
 ];
+
+export const columnsPrettyNames = {
+  logId: 'ID',
+  logLevel: 'Level',
+  logMessage: 'Message',
+  logSource: 'Source',
+  logTimestamp: 'Timestamp',
+  serverId: 'Server ID',
+  serverName: 'Server name',
+  serverDescription: 'Server description',
+  serverUrl: 'Server URL'
+} as const;
+
+export type ColumnsPrettyNames = {
+  readonly [key in keyof typeof columnsPrettyNames]: string;
+};

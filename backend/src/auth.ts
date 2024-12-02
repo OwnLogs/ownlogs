@@ -13,7 +13,8 @@ export const storeUnauthenticatedRequest = async () => {
   const insertedLogs = await LogDAO.insertLog({
     level: 'warn',
     message: 'An unauthorized request was made to the logging server',
-    timestamp: new Date()
+    timestamp: new Date(),
+    serverId: 1
   } as Log);
   logEventEmitter.emit('newLogs', insertedLogs);
 };
