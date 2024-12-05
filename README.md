@@ -35,10 +35,10 @@ To run the project, just run `./run.sh`.
    - [ ] Write terms of services
    - [x] Make graphs of received logs
    - [ ] Add export to all tables
-   - [ ] Homepage
+   - [x] Homepage
      - [x] Add hero
-     - [ ] Add bento
-     - [ ] Add footer
+     - [x] Add bento
+     - [x] Add footer
      - [x] Add a navbar
  - [ ] Others
    - [ ] Add comments to code
@@ -70,13 +70,22 @@ To run the project, just run `./run.sh`.
    - [x] Change edit server modal into a Sheet (Side modal)
  - [x] Roles
    - [x] Add permission management
- - [ ] Analytics dashboard
-   - [ ] Make different graphs presets
-   - [ ] Add ability for users (Admins/Owner) to create their dashboards :
-     - [ ] Custom queries
-     - [ ] Custom graphs types
-     - [ ] Drag and drop graphs around the dashboard
  - [ ] Logs searching
    - [x] Add logs searching
    - [x] Add pagination
    - [ ] Make a more competent searching algorithm
+ - [ ] Dashboards
+   - [ ] Add dashboard
+   - [ ] Edit dashboard
+   - [ ] Delete dashboard
+   - [x] Add card
+   - [x] Edit card
+   - [x] Delete card
+   - [x] Move cards
+   - [x] Table card
+   - [ ] Graph card
+ - [ ] Packages
+   - [x] NPM
+   - [ ] (WIP) Python
+   - [ ] Java
+   - [ ] PHP

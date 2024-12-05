@@ -15,7 +15,6 @@ export const PERMISSIONS = {
   UPDATE_OTHER_ACCOUNTS: "update:other_accounts", // Update other accounts
   DELETE_OTHER_ACCOUNTS: "delete:other_accounts", // Delete other accounts
 
-
 	READ_LOG: "read:log",     // Read logs
 	DELETE_LOG: "delete:log", // Delete logs
 
@@ -23,6 +22,12 @@ export const PERMISSIONS = {
 	CREATE_SERVER: "create:server", // Create servers
 	UPDATE_SERVER: "update:server", // Update servers
 	DELETE_SERVER: "delete:server", // Delete servers
+
+  CREATE_DASHBOARD: "create:dashboard", // Create dashboards
+  READ_DASHBOARD: "read:dashboard",     // Read dashboards
+  UPDATE_DASHBOARD: "update:dashboard", // Update dashboards
+  DELETE_DASHBOARD: "delete:dashboard", // Delete dashboards
+
 
   ALL: "*", // All permissions
   ANY: "any", // Any permission
@@ -42,6 +47,11 @@ const rolePermissions = {
     PERMISSIONS.CREATE_SERVER,
     PERMISSIONS.UPDATE_SERVER,
     PERMISSIONS.DELETE_SERVER,
+
+    PERMISSIONS.READ_DASHBOARD,
+    PERMISSIONS.CREATE_DASHBOARD,
+    PERMISSIONS.UPDATE_DASHBOARD,
+    PERMISSIONS.DELETE_DASHBOARD,
   ],
 	[ROLES.ADMIN]: [
 		PERMISSIONS.READ_OTHER_ACCOUNTS,
@@ -56,10 +66,16 @@ const rolePermissions = {
     PERMISSIONS.CREATE_SERVER,
     PERMISSIONS.UPDATE_SERVER,
     PERMISSIONS.DELETE_SERVER,
+
+    PERMISSIONS.READ_DASHBOARD,
+    PERMISSIONS.CREATE_DASHBOARD,
+    PERMISSIONS.UPDATE_DASHBOARD,
+    PERMISSIONS.DELETE_DASHBOARD,
 	],
 	[ROLES.GUEST]: [
     PERMISSIONS.READ_SERVER,
     PERMISSIONS.READ_LOG,
+    PERMISSIONS.READ_DASHBOARD,
   ],
 };
 

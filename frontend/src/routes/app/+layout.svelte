@@ -5,12 +5,22 @@
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
   import { pageMetadata } from '$lib/stores';
   import { ModeWatcher } from 'mode-watcher';
+  import { Ban } from 'lucide-svelte';
 
   let { children, data } = $props();
   const { user, servers } = data;
 </script>
 
 <ModeWatcher />
+
+<noscript>
+  <div
+    class="fixed inset-0 z-50 flex flex-row items-center justify-center gap-2 bg-background text-center"
+  >
+    <Ban class="size-6 text-primary" />
+    <p class="text-base font-medium">Please allow JavaScript execution</p>
+  </div>
+</noscript>
 
 <div class="relative mx-auto max-w-[1800px] translate-x-0 overflow-hidden">
   <Sidebar.Provider class="h-svh w-full">

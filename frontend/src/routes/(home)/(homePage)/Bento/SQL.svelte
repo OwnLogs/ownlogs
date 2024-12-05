@@ -307,7 +307,7 @@
     </div>
   </div>
   <div class="p-6 pt-0">
-    <span class="text-base font-medium text-neutral-700">
+    <span class="text-base font-medium text-neutral-700 dark:text-neutral-300">
       <Database class="inline size-[18px] align-middle" />
       Query your data ‒ your way.
     </span>

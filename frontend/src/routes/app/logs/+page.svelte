@@ -56,7 +56,7 @@
         server: Server;
         online: boolean;
       }[]
-    | undefined = $state();
+    | null = $state(null);
 
   onMount(() => {
     socket = new WebSocket(WEBSOCKET_URL + '/getLogsOverviewStatistics');
@@ -301,7 +301,7 @@
         </Card.Header>
         <!-- TODO: Fix this fixed max height -->
         <Card.Content class="no-scrollbar flex max-h-[626px] flex-col gap-4 overflow-y-auto">
-          {#if serversStatuses}
+          {#if serversStatuses !== null}
             {#each serversStatuses as serverStatus}
               <a
                 href="/app/servers/{serverStatus.server.id}"

@@ -16,6 +16,7 @@ export const POST: RequestHandler = async ({ request }) => {
     FROM logs, server
     WHERE server.id = logs.serverId
     AND logs.message LIKE CONCAT('%', ?, '%')
+    ORDER BY timestamp DESC
     LIMIT ? OFFSET ?`;
     const [results] = await db.query(sql, [query, resultsPerPage, page * resultsPerPage]);
     const [numberOfResults] = await db.query(

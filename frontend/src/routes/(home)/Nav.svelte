@@ -101,7 +101,7 @@
       <div class="hidden flex-row items-center md:flex">
         <a
           class="rounded-lg px-2 py-1 font-mono text-sm text-muted-foreground transition-colors duration-300 hover:bg-secondary"
-          href="#features">Features</a
+          href="/#features">Features</a
         >
         <a
           class="rounded-lg px-2 py-1 font-mono text-sm text-muted-foreground transition-colors duration-300 hover:bg-secondary"
@@ -110,10 +110,6 @@
         <a
           class="rounded-lg px-2 py-1 font-mono text-sm text-muted-foreground transition-colors duration-300 hover:bg-secondary"
           href="/changelog">Changelog</a
-        >
-        <a
-          class="rounded-lg px-2 py-1 font-mono text-sm text-muted-foreground transition-colors duration-300 hover:bg-secondary"
-          href="/support">Support</a
         >
       </div>
 

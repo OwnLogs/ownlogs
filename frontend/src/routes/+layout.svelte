@@ -3,17 +3,10 @@
   import { Toaster } from '$lib/components/ui/sonner/index.js';
   import { pageMetadata } from '$lib/stores';
   import { page } from '$app/stores';
-  import { ModeWatcher, mode, setMode } from 'mode-watcher';
-  import { onMount } from 'svelte';
+  import { ModeWatcher, mode } from 'mode-watcher';
 
   let { children } = $props();
   const SITE_NAME = 'Logify';
-
-  onMount(() => {
-    if ($page.url.pathname == '/') {
-      setMode('light');
-    }
-  });
 </script>
 
 <svelte:head>

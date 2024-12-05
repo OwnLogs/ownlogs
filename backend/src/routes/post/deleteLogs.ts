@@ -15,6 +15,7 @@ export async function deleteLog(req: Request, res: Response) {
     return;
   }
 
+  // TODO: Fix the cookies being null
   // const token = req.cookies['token'];
   // console.log(req.cookies);
   // const auth = await authenticate(token);

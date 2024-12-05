@@ -19,16 +19,16 @@ FLUSH PRIVILEGES;
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `username` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `passwordHash` varchar(255) NOT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `passwordHash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `role` ENUM('owner','admin','guest') NOT NULL DEFAULT 'guest'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- Server table
 CREATE TABLE IF NOT EXISTS `server` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `name` varchar(255) NOT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `publicUrl` varchar(255) DEFAULT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `publicUrl` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `monitored` BOOLEAN NOT NULL DEFAULT TRUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- Logs table
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `logs` (
   `level` ENUM('debug','info','warn','error','fatal') NOT NULL DEFAULT 'debug',
   `message` text NOT NULL,
   `timestamp` datetime DEFAULT CURRENT_TIMESTAMP,
-  `source` varchar(255) NOT NULL DEFAULT 'unknown',
+  `source` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'unknown',
   `serverId` int,
   FOREIGN KEY (serverId) REFERENCES server(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -46,7 +46,7 @@ CREATE TABLE `serverMonitoring` (
   `id` int NOT NULL,
   `serverId` int NOT NULL,
   `duration` float NOT NULL,
-  `error` varchar(255) DEFAULT NULL,
+  `error` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- Emailing table
@@ -56,6 +56,25 @@ CREATE TABLE IF NOT EXISTS `emailing` (
   `enabled` BOOLEAN NOT NULL DEFAULT true,
   FOREIGN KEY (serverId) REFERENCES server(id),
   FOREIGN KEY (userId) REFERENCES user(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- Card table
+CREATE TABLE IF NOT EXISTS `card` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `title` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `type` enum('table','graph') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `request` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `colSpan` tinyint DEFAULT '1',
+  `dashboardId` int NOT NULL,
+  `rank` int NOT NULL
+  FOREIGN KEY (dashboardId) REFERENCES dashboard(id);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- Dashboard table
+CREATE TABLE IF NOT EXISTS `dashboard` (
+  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `title` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `userId` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
@@ -78,7 +97,7 @@ DELIMITER ;
 CREATE DEFINER=`logify`@`%` EVENT IF NOT EXISTS `rotate_logs_event` ON SCHEDULE EVERY 1 DAY STARTS '2024-11-20 08:00:00' ON COMPLETION NOT PRESERVE ENABLE COMMENT 'Delete old logs to preserve storage' DO CALL log_rotate;
 
 -- Add logs server to the server list
-INSERT INTO `server`(`id`, `name`, `description`, `publicUrl`) VALUES (1, 'Logs server', 'The logs server you are looking this from.', 'http://localhost:4173');
+INSERT INTO `server`(`id`, `name`, `description`, `publicUrl`, `monitored`) VALUES (1, 'Logs server', 'The logs server you are looking this from.', 'http://localhost:4173', 1);
 
 -- Add mailing row
 INSERT INTO `emailing` VALUES(1, 1, 1);

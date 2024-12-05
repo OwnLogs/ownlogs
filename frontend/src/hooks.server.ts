@@ -10,17 +10,21 @@ const routesPermissions: { [key: string]: string | string[] } = {
   '/': P.ANY,
   '/log-in': P.ANY,
   '/register': P.ANY,
+  '/changelog': P.ANY,
   '/app': P.ANY,
   '/app/logs': [P.READ_LOG, P.READ_SERVER],
   '/app/logs/details': [P.READ_LOG, P.DELETE_LOG],
   '/app/logs/querying': [P.READ_LOG],
   '/app/logs/search': P.READ_LOG,
-  '/api/logs/search': P.READ_LOG,
-  '/api/logs/query': P.READ_LOG,
+  '/app/dashboards': P.READ_DASHBOARD,
+  '/app/dashboards/*': P.READ_DASHBOARD,
   '/app/servers': [P.READ_SERVER, P.CREATE_SERVER],
   '/app/servers/*': [P.READ_SERVER, P.UPDATE_SERVER, P.DELETE_SERVER],
   '/app/log-out': P.ANY,
-  '/app/account/settings': P.ANY
+  '/app/account/settings': P.ANY,
+  '/api/logs/search': P.READ_LOG,
+  '/api/logs/query': P.READ_LOG,
+  '/api/dashboard/save': P.UPDATE_DASHBOARD
 };
 
 const canUserNavigateHere = (pathname: string, user: User | undefined): boolean => {

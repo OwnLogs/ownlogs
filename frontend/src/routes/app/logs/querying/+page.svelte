@@ -11,9 +11,9 @@
   import * as Drawer from '$lib/components/ui/drawer/index.js';
   import * as Alert from '$lib/components/ui/alert/index.js';
   import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { toast } from 'svelte-sonner';
+  import { flip } from 'svelte/animate';
 
   pageMetadata.set({
     title: 'Querying',
@@ -375,20 +375,24 @@
           </Button>
         </div>
       </Resizable.Pane>
+      <!-- Help panel -->
       {#if isDesktop.matches}
         <Resizable.Handle withHandle />
-        <!-- Database graph -->
         <Resizable.Pane defaultSize={30} minSize={20}>
           <div class="flex h-full flex-col gap-2 p-4">
             <h1 class="text-lg font-medium">Help</h1>
             <Button onclick={() => (databaseStructureModalVisible = true)}
               >Database structure</Button
             >
+            <!-- History -->
             {#if requestsHistory.length > 0}
               <h1 class="text-lg font-medium">History</h1>
               <div class="flex h-full w-full grow flex-col gap-2 overflow-y-auto">
-                {#each requestsHistory as request}
-                  <div class="relative flex flex-row items-start gap-2 border-t pt-1">
+                {#each requestsHistory as request (request.timestamp)}
+                  <div
+                    class="relative flex flex-row items-start gap-2 border-t bg-background pt-1"
+                    animate:flip={{ duration: 500 }}
+                  >
                     <span class="mt-0.5 text-sm text-muted-foreground"
                       >{formatTimestampHistory(request.timestamp)}</span
                     >

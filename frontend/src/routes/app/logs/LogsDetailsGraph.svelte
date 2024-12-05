@@ -79,8 +79,8 @@
 
   $effect(() => {
     if (chart && data?.series && data?.categories) {
-      options.series = data.series;
-      options.xaxis.categories = data.categories;
+      options.series = data.series as any;
+      options.xaxis.categories = data.categories as any;
       chart.updateOptions(options);
       canShow = true;
       hasNoData = data.series.length === 0;
