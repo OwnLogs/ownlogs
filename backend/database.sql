@@ -3,14 +3,14 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 
 -- Database creation
-CREATE DATABASE IF NOT EXISTS `logify` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-USE `logify`;
+CREATE DATABASE IF NOT EXISTS `ownlogs` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `ownlogs`;
 
 
 -- User
-DROP USER IF EXISTS 'logify'@'%';
-CREATE USER 'logify'@'%' IDENTIFIED BY 'logify';
-GRANT ALL PRIVILEGES ON logify.* TO 'logify'@'%';
+DROP USER IF EXISTS 'ownlogs'@'%';
+CREATE USER 'ownlogs'@'%' IDENTIFIED BY 'ownlogs';
+GRANT ALL PRIVILEGES ON ownlogs.* TO 'ownlogs'@'%';
 FLUSH PRIVILEGES;
 
 
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `dashboard` (
 -- PROCEDURES
 -- Procedure to delete old logs
 DELIMITER $$
-CREATE DEFINER=`logify`@`%` PROCEDURE IF NOT EXISTS `log_rotate`()
+CREATE DEFINER=`ownlogs`@`%` PROCEDURE IF NOT EXISTS `log_rotate`()
 BEGIN
   DELETE FROM logs WHERE level = 'debug' AND timestamp < NOW() - INTERVAL 2 DAY;
   DELETE FROM logs WHERE level = 'info' AND timestamp < NOW() - INTERVAL 7 DAY;
@@ -94,7 +94,7 @@ DELIMITER ;
 
 -- EVENTS
 -- Event that triggers everyday that calls the log_rotate procedure
-CREATE DEFINER=`logify`@`%` EVENT IF NOT EXISTS `rotate_logs_event` ON SCHEDULE EVERY 1 DAY STARTS '2024-11-20 08:00:00' ON COMPLETION NOT PRESERVE ENABLE COMMENT 'Delete old logs to preserve storage' DO CALL log_rotate;
+CREATE DEFINER=`ownlogs`@`%` EVENT IF NOT EXISTS `rotate_logs_event` ON SCHEDULE EVERY 1 DAY STARTS '2024-11-20 08:00:00' ON COMPLETION NOT PRESERVE ENABLE COMMENT 'Delete old logs to preserve storage' DO CALL log_rotate;
 
 -- Add logs server to the server list
 INSERT INTO `server`(`id`, `name`, `description`, `publicUrl`, `monitored`) VALUES (1, 'Logs server', 'The logs server you are looking this from.', 'http://localhost:4173', 1);

@@ -13,7 +13,7 @@
 
   pageMetadata.set({
     title: 'Register',
-    description: 'Create a new Logify account',
+    description: 'Create a new OwnLogs account',
     breadcrumbs: []
   });
 

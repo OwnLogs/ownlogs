@@ -1,9 +1,6 @@
 services:
   backend:
-    container_name: logify_backend
-    build:
-      context: ./
-      dockerfile: ./backend/Dockerfile
+    image: ownlogs/backend
     environment:
       NODE_ENV: production
       MYSQL_HOST: ${MYSQL_HOST}
@@ -18,10 +15,7 @@ services:
       - db
 
   frontend:
-    container_name: logify_frontend
-    build:
-      context: ./
-      dockerfile: ./frontend/Dockerfile
+    image: ownlogs/frontend
     environment:
       PORT: 4173
       ORIGIN: http://localhost:4173
@@ -43,15 +37,15 @@ services:
   db:
     image: mysql
     restart: always
-    container_name: logify_db
+    container_name: ownlogs_db
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
     volumes:
-      - ./db_data:/var/lib/mysql
-      - ./backend/database.sql:/docker-entrypoint-initdb.d/database.sql
+      - ../db_data:/var/lib/mysql
+      - ../backend/database.sql:/docker-entrypoint-initdb.d/database.sql
 
 volumes:
   db_data:

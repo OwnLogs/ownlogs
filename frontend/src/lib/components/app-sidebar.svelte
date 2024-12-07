@@ -66,12 +66,12 @@
           {#snippet child({ props })}
             <a href="/app/logs" {...props}>
               {#if $mode === 'dark'}
-                <img src="/logos/Dark.svg" class="size-8 rounded-md" alt="Logify logo" />
+                <img src="/logos/Dark.svg" class="size-8 rounded-md" alt="OwnLogs logo" />
               {:else}
-                <img src="/logos/Light.svg" class="size-8 rounded-md" alt="Logify logo" />
+                <img src="/logos/Light.svg" class="size-8 rounded-md" alt="OwnLogs logo" />
               {/if}
               <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-semibold">Logify</span>
+                <span class="truncate font-semibold">OwnLogs</span>
               </div>
             </a>
           {/snippet}

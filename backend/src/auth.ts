@@ -4,6 +4,7 @@ import { Response, Request, NextFunction } from 'express';
 import LogDAO from './db/LogDAO';
 import { Log } from '../../shared/types';
 import { logEventEmitter } from './routes/ws/logs';
+import 'dotenv/config';
 
 interface AuthenticatedRequest extends Request {
   user?: any;

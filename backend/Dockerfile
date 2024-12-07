@@ -26,4 +26,3 @@ EXPOSE 3000
 
 # Command to run the application
 CMD ["node", "--env-file=.env", "wait-for-db.js"]
-# CMD ["npm", "run", "start"]

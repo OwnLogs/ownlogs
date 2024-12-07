@@ -43,7 +43,7 @@
   >
     <!-- Heading and close button -->
     <div class="flex flex-row items-center justify-between">
-      <h3 class="text-lg font-semibold">Logify</h3>
+      <h3 class="text-lg font-semibold">OwnLogs</h3>
       <Button
         variant="outline"
         class="aspext-square h-fit p-1"
@@ -82,13 +82,13 @@
     >
       <a href="/" class="flex flex-row items-center">
         <div class="size-8">
-          <img src="/logos/Light.svg" alt="Light Logify logo" class="size-full" />
+          <img src="/logos/Light.svg" alt="Light OwnLogs logo" class="size-full" />
         </div>
         <span
           class={cn(
             'overflow-hidden text-lg font-medium transition-all duration-500',
             isNavActive ? 'w-24 max-md:ml-4 md:w-0' : 'ml-4 w-24'
-          )}>Logify</span
+          )}>OwnLogs</span
         >
         <div
           class={cn(

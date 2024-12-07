@@ -13,7 +13,7 @@
 
   pageMetadata.set({
     title: 'Log-in',
-    description: 'Log into your Logify account',
+    description: 'Log into your OwnLogs account',
     breadcrumbs: []
   });
 

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { findUserByUsername, type User } from './db/user';
 
 /**
@@ -9,7 +9,7 @@ async function auth(token: string): Promise<User | null> {
   return new Promise((resolve, reject) => {
     if (!token) reject({ error: 'No token was provided!' });
     try {
-      jwt.verify(token, JWT_SECRET, async (err, decoded: unknown) => {
+      jwt.verify(token, env.JWT_SECRET as string, async (err, decoded: unknown) => {
         if (err) return reject({ error: err });
         try {
           const users = await findUserByUsername(decoded as string);
@@ -32,7 +32,7 @@ async function auth(token: string): Promise<User | null> {
 }
 
 function generateAccessToken(username: string): string {
-  return jwt.sign(username, JWT_SECRET);
+  return jwt.sign(username, env.JWT_SECRET as string);
 }
 
 export { auth, generateAccessToken };

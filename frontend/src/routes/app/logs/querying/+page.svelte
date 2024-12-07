@@ -143,7 +143,7 @@
   };
 
   async function exportQueryResults() {
-    const filename = 'logify-results';
+    const filename = 'ownlogs-results';
     isExporting = true;
     let dataToExport = rows;
     if (exportLogsAmount === 'all') {

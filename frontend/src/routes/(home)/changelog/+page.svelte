@@ -8,7 +8,7 @@
   pageMetadata.set({
     title: 'Changelog',
     description:
-      'We are constantly improving Logify. Here you can find the latest updates and changes.',
+      'We are constantly improving OwnLogs. Here you can find the latest updates and changes.',
     breadcrumbs: []
   });
 

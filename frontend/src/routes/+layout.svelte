@@ -5,7 +5,7 @@
   import { ModeWatcher, mode } from 'mode-watcher';
 
   let { children } = $props();
-  const SITE_NAME = 'Logify';
+  const SITE_NAME = 'OwnLogs';
 </script>
 
 <svelte:head>
@@ -17,8 +17,8 @@
   <meta property="og:site_name" content={SITE_NAME} />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:site" content="@logify" />
-  <meta name="twitter:creator" content="@logify" />
+  <meta name="twitter:site" content="@{SITE_NAME}" />
+  <meta name="twitter:creator" content="@{SITE_NAME}" />
   <meta name="twitter:domain" content={$page.url.hostname} />
   <meta name="twitter:url" content={$page.url.href.split('#')[0]} />
 

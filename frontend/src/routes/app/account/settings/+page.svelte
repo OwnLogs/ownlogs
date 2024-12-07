@@ -461,7 +461,7 @@
             <Card.Header>
               <Card.Title>Guest accounts</Card.Title>
               <Card.Description
-                >All of the accounts that have access to the Logify service dashboard.</Card.Description
+                >All of the accounts that have access to the OwnLogs service dashboard.</Card.Description
               >
             </Card.Header>
             <Card.Content class="space-y-8">

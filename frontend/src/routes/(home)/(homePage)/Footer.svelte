@@ -3,8 +3,8 @@
 >
   <div class="flex flex-col gap-6">
     <div class="flex flex-row items-center gap-2">
-      <img src="/logos/Dark.svg" class="size-6" alt="Logify logo" />
-      <h5 class="text-lg font-bold">Logify</h5>
+      <img src="/logos/Dark.svg" class="size-6" alt="OwnLogs logo" />
+      <h5 class="text-lg font-bold">OwnLogs</h5>
     </div>
     <p class="text-sm text-muted/50">
       Collect, analyze, and visualize your logs with our powerful, Docker-powered platform.
@@ -13,7 +13,7 @@
     <!-- Socials -->
     <div class="flex flex-row gap-4">
       <!-- Github -->
-      <a href="https://github.com/Angus-Paillaugue/Logify">
+      <a href="https://github.com/OwnLogs/ownlogs">
         <svg
           role="img"
           viewBox="0 0 24 24"

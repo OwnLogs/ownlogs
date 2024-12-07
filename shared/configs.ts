@@ -51,7 +51,7 @@ const defaultBackendConfig: FinalBackendConfig = {
       user: '',
       pass: ''
     },
-    sendingFrom: 'alerts@logify.com'
+    sendingFrom: 'alerts@ownlogs.com'
   },
   monitoring: {
     check_interval: 1000 * 60 * 5, // 5 minutes

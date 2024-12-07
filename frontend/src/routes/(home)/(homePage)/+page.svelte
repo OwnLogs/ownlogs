@@ -8,7 +8,7 @@
   pageMetadata.set({
     title: 'Home',
     description:
-      'Logify is a platform that allows you to log your data and get insights in minutes.',
+      'OwnLogs is a platform that allows you to log your data and get insights in minutes.',
     breadcrumbs: []
   });
 
