@@ -1,9 +1,8 @@
 <script lang="ts">
   import Grid from './grid.svelte';
-  import { pageMetadata } from '$lib/stores';
+  import { pageMetadata, toast } from '$lib/stores';
   import type { PageData } from './$types';
   import type { Card, Dashboard } from '$lib/server/db/dashboard';
-  import { toast } from 'svelte-sonner';
   import { Plus } from 'lucide-svelte';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as Select from '$lib/components/ui/select/index.js';
@@ -91,6 +90,7 @@
   }
 </script>
 
+<!-- Add card to dashboard -->
 <Dialog.Root bind:open={addCardModalOpen}>
   <Dialog.Content>
     <Dialog.Header>

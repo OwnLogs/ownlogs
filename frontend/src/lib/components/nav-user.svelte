@@ -58,7 +58,7 @@
         <DropdownMenu.Group>
           <a href="/app/account/settings">
             <DropdownMenu.Item>
-              <Settings />
+              <Settings class="size-5" />
               Settings
             </DropdownMenu.Item>
           </a>
@@ -67,19 +67,19 @@
         <DropdownMenu.Item onclick={toggleMode}>
           {#if $mode === 'dark'}
             <div in:scale>
-              <Moon class="size-6" />
+              <Sun class="size-4" />
             </div>
           {:else}
             <div in:scale>
-              <Sun class="size-6" />
+              <Moon class="size-4" />
             </div>
           {/if}
-          {$mode === 'dark' ? 'Dark' : 'Light'} mode
+          {$mode === 'light' ? 'Dark' : 'Light'} mode
         </DropdownMenu.Item>
         <DropdownMenu.Separator />
         <a href="/app/log-out">
           <DropdownMenu.Item>
-            <LogOut />
+            <LogOut class="size-5" />
             Log out
           </DropdownMenu.Item>
         </a>

@@ -4,9 +4,9 @@
   import { cn } from '$lib/utils';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 
-  let ApexCharts = $state();
-  let chartElement = $state();
-  let chart = $state();
+  let ApexCharts: any = $state();
+  let chartElement: HTMLDivElement | undefined = $state();
+  let chart: any = $state();
   let canShow = $state(false);
   let hasNoData = $state(false);
 

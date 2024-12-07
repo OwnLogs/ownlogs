@@ -23,6 +23,3 @@ vite.config.ts.timestamp-*
 
 pnpm-lock.yaml
 db_data/
-
-# Python
-__pycache__/

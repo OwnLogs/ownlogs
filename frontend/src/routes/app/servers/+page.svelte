@@ -34,7 +34,7 @@
 {/if}
 
 <div class="flex w-full flex-col">
-  <div class="gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+  <div class="p-4 sm:px-6 sm:py-0">
     <Card.Root>
       <Card.Header>
         <Card.Title>Your servers</Card.Title>

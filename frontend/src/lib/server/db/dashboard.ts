@@ -7,9 +7,9 @@ export interface Card {
   request: string;
   rank: number;
   colSpan: 1 | 2 | 3;
-  type: 'table' | 'chart';
+  type: 'table' | 'graph';
   data?: unknown[];
-  config?: unknown;
+  chartType?: 'line' | 'bar' | 'pie';
 }
 
 export interface Dashboard {
@@ -48,7 +48,7 @@ export async function getDashboard(id: number, userId: number): Promise<Dashboar
   const [cards] = await DB.query(cardsSQL, [id]);
   await Promise.all(
     (cards as Card[]).map(async (card) => {
-      if (card.request && card.type === 'table') {
+      if (card.request) {
         card.data = await getCardData(card);
       }
       return card;
@@ -72,20 +72,22 @@ export async function updateDashboard(data: Dashboard, userId: number): Promise<
   await Promise.all(
     cards.map(async (card) => {
       const cardSql = `
-      INSERT INTO card (id, title, type, request, colSpan, \`rank\`, dashboardId)
-      VALUES(?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO card (id, title, description, type, request, colSpan, \`rank\`, dashboardId)
+      VALUES(?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
-      title = ?, type = ?, request = ?, colSpan = ?, \`rank\` = ?
+      title = ?, description = ?, type = ?, request = ?, colSpan = ?, \`rank\` = ?
       `;
       await DB.query(cardSql, [
         card.id,
         card.title,
+        card.description,
         card.type,
         card.request,
         card.colSpan,
         card.rank,
         data.id,
         card.title,
+        card.description,
         card.type,
         card.request,
         card.colSpan,
@@ -104,4 +106,15 @@ export async function updateDashboard(data: Dashboard, userId: number): Promise<
   await DB.query(deleteCardsSql, [data.id, cardIds]);
 
   return await getDashboard(data.id, userId);
+}
+
+export async function getDashboards(userId: number) {
+  const dashboardSql = `
+  SELECT
+    *
+  FROM dashboard
+  WHERE userId = ?
+  `;
+  const [dashboards] = await DB.query(dashboardSql, [userId]);
+  return dashboards as Dashboard[];
 }

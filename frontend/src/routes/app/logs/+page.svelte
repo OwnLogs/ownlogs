@@ -19,7 +19,7 @@
     Server as ServerIcon
   } from 'lucide-svelte';
   import LogLevel from '$lib/components/LogLevel.svelte';
-  import { pageMetadata } from '$lib/stores';
+  import { pageMetadata, toast } from '$lib/stores';
   import { WEBSOCKET_URL } from '$lib/constants';
   import {
     type LogLevel as LogLevelType,
@@ -27,11 +27,11 @@
     type ServerStatistics,
     type Server
   } from '@shared/types';
-  import { toast } from 'svelte-sonner';
   import { onMount } from 'svelte';
   import { cn, formatTimestamp, formatBytes } from '$lib/utils';
   import LogsDetailsGraph from './LogsDetailsGraph.svelte';
   import { hasPermission, PERMISSIONS } from '@shared/roles';
+  import { beforeNavigate } from '$app/navigation';
 
   pageMetadata.set({
     title: 'Logs overview',
@@ -44,6 +44,8 @@
 
   let socket: WebSocket | undefined = $state();
   let serverStatistics: ServerStatistics | undefined = $state();
+  let isLoaded = $state(false);
+  let toastId: string = $state('serverStatusInLogsOverview');
   let logStatisticsByDay: {
     series: { name: string; data: number[] }[];
     categories: string[];
@@ -58,7 +60,10 @@
       }[]
     | null = $state(null);
 
-  onMount(() => {
+  function webSocket(initial = true) {
+    if(!initial) {
+      toast.info('Connecting to the server...', { id: toastId });
+    }
     socket = new WebSocket(WEBSOCKET_URL + '/getLogsOverviewStatistics');
 
     // Listen for messages
@@ -107,9 +112,42 @@
       }
     });
 
+    socket.addEventListener('open', () => {
+      if(!initial) toast.info('Connected to the server', { id: toastId });
+    });
+
+    socket.addEventListener('close', () => {
+      try {
+        if(isLoaded)
+        toast.error('The connection to the server was closed', {
+          id: toastId,
+          timeout: -1,
+          action:{
+            label: 'Reconnect',
+            onClick: () => {
+              webSocket(false);
+            }
+          }
+        });
+      } catch(e) {
+
+      }
+    });
+  }
+
+  onMount(() => {
+    isLoaded = true;
+    webSocket();
+
+    // Close the socket when the component is destroyed
     return () => {
+      if(socket)
       socket?.close();
     };
+  });
+
+  beforeNavigate(() => {
+    isLoaded = false
   });
 
   const formatUptime = (secs: number): string => {

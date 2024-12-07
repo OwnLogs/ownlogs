@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { pageMetadata } from '$lib/stores';
+  import { pageMetadata, toast } from '$lib/stores';
   import { enhance } from '$app/forms';
   import { cn } from '$lib/utils';
-  import { toast } from 'svelte-sonner';
   import { EllipsisVertical, Trash2, Pencil } from 'lucide-svelte';
   import { MediaQuery } from 'runed';
   import { Button, buttonVariants } from '$lib/components/ui/button/index.js';

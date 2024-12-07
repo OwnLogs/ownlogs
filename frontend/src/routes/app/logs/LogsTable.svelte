@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { toast } from 'svelte-sonner';
   import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
   import Button from '$lib/components/ui/button/button.svelte';
   import * as Table from '$lib/components/ui/table/index.js';
@@ -14,6 +13,7 @@
   import { backOut } from 'svelte/easing';
   import { cn } from '$lib/utils';
   import type { Log } from '@shared/types';
+  import { toast } from '$lib/stores';
   import {
     getCoreRowModel,
     getPaginationRowModel,
@@ -54,6 +54,7 @@
   export async function refresh() {
     isLoading = true;
     await getResults({ pageNumber: currentPage, pageSize });
+    table.setPageSize(pageSize);
     isLoading = false;
   }
 

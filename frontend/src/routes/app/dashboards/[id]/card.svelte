@@ -10,6 +10,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import GraphCard from './GraphCard.svelte';
 
   let {
     card = $bindable(),
@@ -31,7 +32,8 @@
   let deleteCardConfirmModalOpen = $state(false);
   let editCardData = $state(JSON.parse(JSON.stringify(card)));
 
-  function editCard(): void {
+  function editCard(e: SubmitEvent): void {
+    e.preventDefault();
     card = JSON.parse(JSON.stringify(editCardData));
     onEditCard();
     editCardModalOpen = false;
@@ -149,7 +151,7 @@
 
 {#snippet GraphCardComponent(card: Card)}
   <div>
-    <pre>{JSON.stringify(card.config, null, 2)}</pre>
+    <pre>{JSON.stringify(card, null, 2)}</pre>
   </div>
 {/snippet}
 
@@ -179,10 +181,15 @@
         {/if}
       </CardComponent.Header>
       <CardComponent.Content>
-        {#if typeof card === 'object' && 'data' in card}
+        {#if card.type === 'table'}
           {@render DataCardComponent(card)}
-        {:else if typeof card === 'object' && 'config' in card}
-          {@render GraphCardComponent(card)}
+        {:else if card.type === 'graph'}
+          <GraphCard
+            type={card.chartType as string}
+            data={card.data as unknown[]}
+            xKey="level"
+            yKeys={['count']}
+          />
         {/if}
       </CardComponent.Content>
     </CardComponent.Root>

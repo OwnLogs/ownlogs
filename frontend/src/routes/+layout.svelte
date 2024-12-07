@@ -1,6 +1,5 @@
 <script lang="ts">
   import '../app.css';
-  import { Toaster } from '$lib/components/ui/sonner/index.js';
   import { pageMetadata } from '$lib/stores';
   import { page } from '$app/stores';
   import { ModeWatcher, mode } from 'mode-watcher';
@@ -39,8 +38,6 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicons/{$mode}/favicon-16x16.png" />
   {/if}
 </svelte:head>
-
-<Toaster />
 
 <ModeWatcher />
 

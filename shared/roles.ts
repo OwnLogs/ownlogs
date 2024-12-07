@@ -30,47 +30,14 @@ export const PERMISSIONS = {
 
 
   ALL: "*", // All permissions
-  ANY: "any", // Any permission
 };
 
 const rolePermissions = {
   [ROLES.OWNER]: [
-    PERMISSIONS.READ_OTHER_ACCOUNTS,
-    PERMISSIONS.CREATE_OTHER_ACCOUNTS,
-    PERMISSIONS.UPDATE_OTHER_ACCOUNTS,
-    PERMISSIONS.DELETE_OTHER_ACCOUNTS,
-
-    PERMISSIONS.READ_LOG,
-    PERMISSIONS.DELETE_LOG,
-
-    PERMISSIONS.READ_SERVER,
-    PERMISSIONS.CREATE_SERVER,
-    PERMISSIONS.UPDATE_SERVER,
-    PERMISSIONS.DELETE_SERVER,
-
-    PERMISSIONS.READ_DASHBOARD,
-    PERMISSIONS.CREATE_DASHBOARD,
-    PERMISSIONS.UPDATE_DASHBOARD,
-    PERMISSIONS.DELETE_DASHBOARD,
+    PERMISSIONS.ALL
   ],
 	[ROLES.ADMIN]: [
-		PERMISSIONS.READ_OTHER_ACCOUNTS,
-    PERMISSIONS.CREATE_OTHER_ACCOUNTS,
-    PERMISSIONS.UPDATE_OTHER_ACCOUNTS,
-    PERMISSIONS.DELETE_OTHER_ACCOUNTS,
-
-    PERMISSIONS.READ_LOG,
-    PERMISSIONS.DELETE_LOG,
-
-    PERMISSIONS.READ_SERVER,
-    PERMISSIONS.CREATE_SERVER,
-    PERMISSIONS.UPDATE_SERVER,
-    PERMISSIONS.DELETE_SERVER,
-
-    PERMISSIONS.READ_DASHBOARD,
-    PERMISSIONS.CREATE_DASHBOARD,
-    PERMISSIONS.UPDATE_DASHBOARD,
-    PERMISSIONS.DELETE_DASHBOARD,
+		PERMISSIONS.ALL
 	],
 	[ROLES.GUEST]: [
     PERMISSIONS.READ_SERVER,
@@ -84,7 +51,7 @@ export function hasEveryPermission(role: string | undefined, ...permissions: str
   if (!role) {
     return false;
   }
-  if (permissions.includes(PERMISSIONS.ANY)) {
+  if(rolePermissions[role].includes(PERMISSIONS.ALL)) {
     return true;
   }
   if (!rolePermissions[role]) {
@@ -97,7 +64,7 @@ export function hasAtLeastOnePermission(role: string | undefined, ...permissions
   if (!role) {
     return false;
   }
-  if (permissions.includes(PERMISSIONS.ANY)) {
+  if(rolePermissions[role].includes(PERMISSIONS.ALL)) {
     return true;
   }
   if (!rolePermissions[role]) {
@@ -111,7 +78,7 @@ export function hasPermission(role: string | undefined, permission: string): boo
   if (!role) {
     return false;
   }
-  if (permission.includes(PERMISSIONS.ANY)) {
+  if(rolePermissions[role].includes(PERMISSIONS.ALL)) {
     return true;
   }
   if (!rolePermissions[role]) {

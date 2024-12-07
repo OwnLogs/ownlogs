@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { User } from '$lib/server/db/user.js';
-  import { toast } from 'svelte-sonner';
-  import { pageMetadata } from '$lib/stores';
+  import { pageMetadata, toast } from '$lib/stores';
   import { enhance } from '$app/forms';
   import { buttonVariants } from '$lib/components/ui/button/index.js';
   import { MediaQuery } from 'runed';

@@ -7,6 +7,9 @@ const config = getBackendConfig();
 const transporter = createTransport(config.SMTP);
 
 export async function sendEmail(to: string, subject: string, text: string) {
+  if (config.SMTP.host === '') {
+    return ;
+  }
   try {
     await transporter.sendMail({
       from: `"Log Alert" <${config.SMTP.sendingFrom}>`,

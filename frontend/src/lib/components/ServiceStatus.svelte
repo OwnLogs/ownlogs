@@ -11,11 +11,11 @@
       <div
         class={cn(
           'absolute inset-0 animate-ping rounded-full',
-          isOnline ? 'bg-green-400 dark:bg-green-600' : 'bg-red-400 dark:bg-red-600'
+          isOnline ? 'bg-emerald-400 dark:bg-emerald-600' : 'bg-red-400 dark:bg-red-600'
         )}
       ></div>
       <div
-        class={cn('absolute inset-0 rounded-full', isOnline ? 'bg-green-400' : 'bg-red-500')}
+        class={cn('absolute inset-0 rounded-full', isOnline ? 'bg-emerald-400' : 'bg-red-500')}
       ></div>
     </div>
   </Tooltip.Trigger>

@@ -456,7 +456,10 @@
           <div class="flex flex-row items-center">
             <Button size="sm" onclick={() => (exportLogsModalOpen = true)}>Export</Button>
           </div>
-          <div class="items-cente flex flex-row gap-6">
+          <div class="items-center flex flex-row gap-6">
+            <span class="text-muted-foreground text-sm">
+              {rows.length} results
+            </span>
             <!-- Current page index / Total pages -->
             <span class="text-sm font-semibold">
               Page {currentPage + 1} / {numberOfPages}

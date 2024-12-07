@@ -189,7 +189,7 @@
             <p class="text-sm font-medium">
               Error{filledMonitoring[isHoveringIndex].errors.length > 1 ? 's' : ''}
             </p>
-            <div class="h-18 overflow-y-auto">
+            <div class="h-32 overflow-y-auto">
               {#each filledMonitoring[isHoveringIndex].errors as error}
                 <div class="flex flex-row items-center gap-2">
                   <time datetime={error.timestamp.toString()} class="font-mono text-sm">

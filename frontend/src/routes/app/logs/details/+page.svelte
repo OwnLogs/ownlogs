@@ -1,12 +1,12 @@
 <script lang="ts" generics="TData, TValue">
   import { Label } from '$lib/components/ui/label/index.js';
   import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { pageMetadata } from '$lib/stores';
+  import { pageMetadata, toast } from '$lib/stores';
   import { onMount } from 'svelte';
   import { WEBSOCKET_URL } from '$lib/constants';
-  import { toast } from 'svelte-sonner';
   import LogsTable from '../LogsTable.svelte';
   import type { Log } from '@shared/types';
+  import { beforeNavigate } from '$app/navigation';
 
   pageMetadata.set({
     title: 'Logs overview',
@@ -22,16 +22,21 @@
   let socket: WebSocket | undefined = $state();
   let table = $state();
   let pageSize = $state(30);
+  let numberOfPages = $state(0);
+  let isLoaded = $state(false);
+  let toastId: string = $state('serverStatusInDetails');
 
   // Fetches logs based on the specified log level
   async function fetchLogs(page: number = 0) {
     if (!socket) return;
 
-    socket.send(JSON.stringify({ action: 'fetchLogs', page, pageSize: table.pageSize }));
+    socket.send(JSON.stringify({ action: 'fetchLogs', page, pageSize: pageSize }));
   }
 
-  // Connect to websocket and listen for new logs
-  onMount(() => {
+  function webSocket(initial = true) {
+    if(!initial) {
+      toast.info('Connecting to the server...', { id: toastId });
+    }
     socket = new WebSocket(WEBSOCKET_URL + '/logs');
 
     // Listen for messages
@@ -58,6 +63,7 @@
         case 'fetchLogs': {
           rows = response.logs;
           table.table.setPageSize(response.pageSize);
+          numberOfPages = Math.ceil(response.totalLogs / response.pageSize);
           break;
         }
 
@@ -90,7 +96,37 @@
     // Fetching initial logs on connection
     socket.addEventListener('open', () => {
       fetchLogs();
+      if(!initial) toast.info('Connected to the server', { id: toastId });
     });
+
+    socket.addEventListener('close', () => {
+      if (isLoaded)
+        toast.error('The connection to the server was closed', {
+          id: toastId,
+          timeout: -1,
+          action: {
+            label: 'Reconnect',
+            onClick: () => {
+              webSocket(false);
+            }
+          }
+        });
+    });
+  }
+
+  // Connect to websocket and listen for new logs
+  onMount(() => {
+    isLoaded = true;
+    webSocket();
+
+    // Close the socket when the component is destroyed
+    return () => {
+      if (socket) socket?.close();
+    };
+  });
+
+  beforeNavigate(() => {
+    isLoaded = false;
   });
 
   const realTimeChange = (e: boolean) => {
@@ -108,12 +144,25 @@
   function fetchLogsPage({ pageNumber }: { pageNumber: number }) {
     fetchLogs(pageNumber);
   }
+
+  $effect(() => {
+    if (socket === undefined) {
+      toastId = '';
+    }
+  });
 </script>
 
 <div class="sm:px-6 sm:pb-6">
   <!-- Logs table -->
   <div class="rounded-md border">
-    <LogsTable {user} getResults={fetchLogsPage} bind:this={table} bind:pageSize bind:rows>
+    <LogsTable
+      {user}
+      getResults={fetchLogsPage}
+      bind:this={table}
+      bind:pageSize
+      bind:rows
+      bind:numberOfPages
+    >
       <!-- Real-time checkbox -->
       <div class="flex items-center space-x-2">
         <Checkbox id="realTimeLogs" checked={realTime} onCheckedChange={realTimeChange} />

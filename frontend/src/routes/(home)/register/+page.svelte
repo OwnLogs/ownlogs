@@ -3,8 +3,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import { enhance } from '$app/forms';
-  import { toast } from 'svelte-sonner';
-  import { pageMetadata } from '$lib/stores';
+  import { pageMetadata, toast } from '$lib/stores';
   import { theme } from 'mode-watcher';
   import logInImageDark from '$lib/assets/logInImageDark.jpg?enhanced';
   import logInImageLight from '$lib/assets/logInImageLight.jpg?enhanced';

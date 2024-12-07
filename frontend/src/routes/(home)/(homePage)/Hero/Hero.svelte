@@ -62,7 +62,7 @@
     <div
       class="relative mt-auto aspect-video w-full translate-y-14 overflow-hidden rounded-3xl border-2 border-primary bg-background p-3"
     >
-      <div class="absolute inset-0 -z-10 bg-primary/15"></div>
+      <div class="absolute inset-0 -z-10 bg-primary/30 dark:bg-primary/20"></div>
       <div
         class="relative size-full cursor-none overflow-hidden rounded-2xl bg-background shadow hover:cursor-none"
         bind:this={fakeCursorContainer}

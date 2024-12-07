@@ -6,6 +6,7 @@
   import { pageMetadata } from '$lib/stores';
   import { ModeWatcher } from 'mode-watcher';
   import { Ban } from 'lucide-svelte';
+  import { AppToaster } from '$lib/components/ui/sonner/index.js';
 
   let { children, data } = $props();
   const { user, servers } = data;
@@ -26,6 +27,7 @@
   <Sidebar.Provider class="h-svh w-full">
     <AppSidebar {user} {servers} />
     <Sidebar.Inset class="overflow-hidden">
+      <AppToaster />
       <header class="flex h-16 shrink-0 items-center gap-2">
         <div class="flex items-center gap-2 px-4">
           <Sidebar.Trigger class="-ml-1" />

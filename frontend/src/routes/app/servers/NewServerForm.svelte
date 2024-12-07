@@ -4,7 +4,7 @@
   import { formSchema, type FormSchema } from './schema';
   import { type SuperValidated, type Infer, superForm } from 'sveltekit-superforms';
   import { zodClient } from 'sveltekit-superforms/adapters';
-  import { toast } from 'svelte-sonner';
+  import { toast } from '$lib/stores';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
 

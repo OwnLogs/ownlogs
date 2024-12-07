@@ -5,11 +5,15 @@ import type { PageServerLoad } from '../$types';
 export const load = (async ({
   params: { id: idDashboard },
   locals: {
-    user: { id: userId }
+    user
   }
 }) => {
+  if(!user) {
+    throw error(401, 'Unauthorized');
+  }
+  
   try {
-    const dashboard = await getDashboard(idDashboard, userId);
+    const dashboard = await getDashboard(idDashboard, user?.id);
     return { dashboard };
   } catch (e) {
     if (e instanceof Error) {
