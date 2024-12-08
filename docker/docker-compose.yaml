@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ownlogs/backend
+    image: ownlogs/backend:latest
     environment:
       NODE_ENV: production
       MYSQL_HOST: ${MYSQL_HOST}
@@ -15,11 +15,10 @@ services:
       - db
 
   frontend:
-    image: ownlogs/frontend
+    image: ownlogs/frontend:latest
     environment:
       PORT: 4173
       ORIGIN: http://localhost:4173
-      HOST: 0.0.0.0
       PUBLIC_BACKEND_HOST: localhost
       PUBLIC_BACKEND_PORT: 3000
       JWT_SECRET: ${JWT_SECRET}

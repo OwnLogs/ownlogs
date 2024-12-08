@@ -19,7 +19,6 @@ services:
     environment:
       PORT: 4173
       ORIGIN: http://localhost:4173
-      HOST: 0.0.0.0
       PUBLIC_BACKEND_HOST: localhost
       PUBLIC_BACKEND_PORT: 3000
       JWT_SECRET: ${JWT_SECRET}

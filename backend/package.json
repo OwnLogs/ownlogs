@@ -4,12 +4,9 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "npx tsc",
-    "start": "node dist/backend/src/index.js",
+    "start": "node build/backend/src/index.js",
     "dev": "nodemon",
     "format": "prettier --write ."
-  },
-  "imports": {
-    "@shared/configs": "../shared/configs.ts"
   },
   "author": "",
   "license": "ISC",

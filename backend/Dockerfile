@@ -1,28 +1,25 @@
-FROM node:22-alpine
+FROM node:22-alpine AS build
+WORKDIR /app
 
-# Set environment variables
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
-# Set the working directory
-WORKDIR /usr/src/app
+COPY ./backend/package.json ./backend/
+WORKDIR /app/backend
+RUN --mount=type=cache,target=/root/.npm npm install
 
 # Copy the application code and shared types
+WORKDIR /app
 COPY ./backend ./backend
 COPY ./shared ./shared
 
-# Set the working directory to the backend
-WORKDIR /usr/src/app/backend
+# Build
+WORKDIR /app/backend
+RUN npm run build
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Build the application
-RUN pnpm run build
-
-# Expose the port the app runs on
-EXPOSE 3000
-
-# Command to run the application
-CMD ["node", "--env-file=.env", "wait-for-db.js"]
+# Prod server
+FROM node:22-alpine AS prod
+WORKDIR /app/backend
+COPY --from=build /app/backend/build build/
+COPY --from=build /app/backend/node_modules node_modules/
+COPY backend/package.json .
+COPY backend/wait-for-db.js .
+EXPOSE ${PORT}
+CMD [ "node", "wait-for-db.js" ]
