@@ -8,7 +8,7 @@ const transporter = createTransport(config.SMTP);
 
 export async function sendEmail(to: string, subject: string, text: string) {
   if (config.SMTP.host === '') {
-    return ;
+    return;
   }
   try {
     await transporter.sendMail({

@@ -34,7 +34,7 @@
   }
 
   function webSocket(initial = true) {
-    if(!initial) {
+    if (!initial) {
       toast.info('Connecting to the server...', { id: toastId });
     }
     socket = new WebSocket(WEBSOCKET_URL + '/logs');
@@ -96,7 +96,7 @@
     // Fetching initial logs on connection
     socket.addEventListener('open', () => {
       fetchLogs();
-      if(!initial) toast.info('Connected to the server', { id: toastId });
+      if (!initial) toast.success('Connected to the server', { id: toastId });
     });
 
     socket.addEventListener('close', () => {

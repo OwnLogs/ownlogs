@@ -24,7 +24,12 @@ const routesPermissions: { [key: string]: string | string[] } = {
   '/app/account/settings': P.ANY,
   '/api/logs/search': P.READ_LOG,
   '/api/logs/query': P.READ_LOG,
-  '/api/dashboard/save': P.UPDATE_DASHBOARD
+  '/api/dashboard/save': P.UPDATE_DASHBOARD,
+  '/api/ai/createMessage': P.CREATE_AI_CONVERSATION,
+  '/api/ai/saveConversation': P.UPDATE_AI_CONVERSATION,
+  '/api/ai/deleteConversation': P.DELETE_AI_CONVERSATION,
+  '/app/ai': [P.READ_AI_CONVERSATION, P.CREATE_AI_CONVERSATION],
+  '/app/ai/*': P.READ_AI_CONVERSATION
 };
 
 const canUserNavigateHere = (pathname: string, user: User | undefined): boolean => {
@@ -107,20 +112,24 @@ export const handle = async ({ event, resolve }) => {
 
   const hasARegisteredUser = await hasAUserRegistered();
   locals.hasARegisteredUser = hasARegisteredUser;
-  if (urlStartsWith(url.pathname, '/register')) {
-    if (locals.hasARegisteredUser && !locals?.user) {
-      throw redirect(307, '/log-in');
-    } else {
-      if (hasARegisteredUser) {
-        locals.hasARegisteredUser = hasARegisteredUser;
-        throw redirect(307, '/log-in');
-      }
-    }
+
+  // Has a registered user and trying to access the register page
+  if (urlStartsWith(url.pathname, '/register') && hasARegisteredUser) {
+    throw redirect(307, '/log-in');
   }
 
   // User is logged in and trying to access the login page
   if (locals.user && urlStartsWith(url.pathname, '/log-in')) {
     throw redirect(307, '/app/logs');
+  }
+
+  // Trying to access the home page, redirect to the appropriate page
+  if (url.pathname === '/') {
+    if (hasARegisteredUser) {
+      throw redirect(307, '/log-in');
+    } else {
+      throw redirect(307, '/register');
+    }
   }
 
   const response = await resolve(event);

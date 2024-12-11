@@ -28,8 +28,13 @@ export const PERMISSIONS = {
   UPDATE_DASHBOARD: "update:dashboard", // Update dashboards
   DELETE_DASHBOARD: "delete:dashboard", // Delete dashboards
 
+  CREATE_AI_CONVERSATION: "create:ai_conversation", // Create AI conversations
+  READ_AI_CONVERSATION: "read:ai_conversation",     // List and read AI conversations
+  UPDATE_AI_CONVERSATION: "update:ai_conversation", // Update AI conversations
+  DELETE_AI_CONVERSATION: "delete:ai_conversation", // Delete AI conversations
 
   ALL: "*", // All permissions
+  ANY: 'any'
 };
 
 const rolePermissions = {
@@ -51,7 +56,7 @@ export function hasEveryPermission(role: string | undefined, ...permissions: str
   if (!role) {
     return false;
   }
-  if(rolePermissions[role].includes(PERMISSIONS.ALL)) {
+  if(rolePermissions[role].includes(PERMISSIONS.ALL) || rolePermissions[role].includes(PERMISSIONS.ANY)) {
     return true;
   }
   if (!rolePermissions[role]) {
@@ -64,7 +69,8 @@ export function hasAtLeastOnePermission(role: string | undefined, ...permissions
   if (!role) {
     return false;
   }
-  if(rolePermissions[role].includes(PERMISSIONS.ALL)) {
+
+  if(rolePermissions[role].includes(PERMISSIONS.ALL) || permissions.includes(PERMISSIONS.ANY)) {
     return true;
   }
   if (!rolePermissions[role]) {
@@ -78,7 +84,7 @@ export function hasPermission(role: string | undefined, permission: string): boo
   if (!role) {
     return false;
   }
-  if(rolePermissions[role].includes(PERMISSIONS.ALL)) {
+  if(rolePermissions[role].includes(PERMISSIONS.ALL) || rolePermissions[role].includes(PERMISSIONS.ANY)) {
     return true;
   }
   if (!rolePermissions[role]) {

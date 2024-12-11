@@ -50,7 +50,7 @@
           </Breadcrumb.Root>
         </div>
       </header>
-      <div class="no-scrollbar h-full overflow-y-auto overflow-x-hidden">
+      <div class="no-scrollbar relative h-full overflow-y-auto overflow-x-hidden">
         {@render children?.()}
       </div>
     </Sidebar.Inset>

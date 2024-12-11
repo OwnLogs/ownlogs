@@ -2,7 +2,14 @@
   import NavMain from '$lib/components/nav-main.svelte';
   import NavUser from '$lib/components/nav-user.svelte';
   import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-  import { ChartArea, Server as ServerIcon, Search, Database, ListCollapse } from 'lucide-svelte';
+  import {
+    ChartArea,
+    Server as ServerIcon,
+    Search,
+    Database,
+    ListCollapse,
+    Brain
+  } from 'lucide-svelte';
   import { type Server } from '@shared/types';
   import { mode } from 'mode-watcher';
   import { PERMISSIONS } from '@shared/roles';
@@ -53,6 +60,12 @@
           url: `/app/servers/${server.id}`,
           permissions: [PERMISSIONS.READ_SERVER]
         }))
+      },
+      {
+        title: 'AI',
+        icon: Brain,
+        url: '/app/ai',
+        permissions: [PERMISSIONS.READ_AI_CONVERSATION]
       }
     ]
   };

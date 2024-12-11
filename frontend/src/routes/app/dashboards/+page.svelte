@@ -22,9 +22,7 @@
             <Card.Header class="p-6">
               <Card.Title>{dashboard.title}</Card.Title>
               {#if dashboard.description}
-                <Card.Description
-                  >{dashboard.description}</Card.Description
-                >
+                <Card.Description>{dashboard.description}</Card.Description>
               {/if}
             </Card.Header>
           </Card.Root>
