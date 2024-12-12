@@ -67,7 +67,7 @@ export async function deleteConversation(idConversation: number, userId: number)
     throw new Error('User not authorized to delete this conversation');
   }
 
-  Promise.all(conversation.messages.map((message) => deleteMessage(message.id)));
+  await Promise.all(conversation.messages.map((message) => deleteMessage(message.id)));
 
   const sql = `
   DELETE FROM conversation

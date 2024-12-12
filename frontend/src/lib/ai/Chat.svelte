@@ -28,7 +28,7 @@
     dangerouslyAllowBrowser: true
   });
 
-  let { conversation, user }: { conversation: Conversation; user: User | undefined } = $props();
+  let { conversation = $bindable(), user }: { conversation: Conversation; user: User | undefined } = $props();
   let messages: BuildingMessage[] = $state(conversation.messages);
   let message: string = $state('');
   let pullProgress: { completed: number; total: number } | null = $state(null);
