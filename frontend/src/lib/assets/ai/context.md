@@ -273,7 +273,7 @@ The python in a work in progress in is not fully implemented.
 # Installing
 To install the default way, you can run the following code snippet. It will execute the install script (pull docker images and run them)
 ```bash
-bash <(curl -s https://github.com/OwnLogs/ownlogs/blob/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/ownlogs/ownlogs/main/install.sh)
 ```
 
 
