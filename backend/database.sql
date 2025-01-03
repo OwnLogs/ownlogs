@@ -7,7 +7,7 @@ CREATE DATABASE IF NOT EXISTS `ownlogs`;
 USE `ownlogs`;
 
 
--- User
+-- User: The user that will be used to connect to the database by the front and back end
 DROP USER IF EXISTS 'ownlogs'@'%';
 CREATE USER 'ownlogs'@'%' IDENTIFIED BY 'ownlogs';
 GRANT ALL PRIVILEGES ON ownlogs.* TO 'ownlogs'@'%';
@@ -15,7 +15,7 @@ FLUSH PRIVILEGES;
 
 
 -- TABLES
--- User table
+-- User table: All of the users of the platform
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `username` varchar(20) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `passwordHash` varchar(255) NOT NULL,
   `role` ENUM('owner','admin','guest') NOT NULL DEFAULT 'guest'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Server table
+-- Server table: All of the servers that are monitored
 CREATE TABLE IF NOT EXISTS `server` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `name` varchar(255) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `server` (
   `publicUrl` varchar(255) DEFAULT NULL,
   `monitored` BOOLEAN NOT NULL DEFAULT TRUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Logs table
+-- Logs table: All of the logs that are stored
 CREATE TABLE IF NOT EXISTS `logs` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `level` ENUM('debug','info','warn','error','fatal') NOT NULL DEFAULT 'debug',
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `logs` (
   `serverId` int,
   FOREIGN KEY (serverId) REFERENCES server(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Server monitoring table
+-- Server monitoring table: All of the monitoring data of the servers
 CREATE TABLE IF NOT EXISTS `serverMonitoring` (
   `id` int NOT NULL,
   `serverId` int NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS `serverMonitoring` (
   `error` varchar(255) DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Emailing table
+-- Emailing table: All of the email configurations for the users
 CREATE TABLE IF NOT EXISTS `emailing` (
   `userId` int NOT NULL,
   `serverId` int NOT NULL,
@@ -57,14 +57,14 @@ CREATE TABLE IF NOT EXISTS `emailing` (
   FOREIGN KEY (serverId) REFERENCES server(id),
   FOREIGN KEY (userId) REFERENCES user(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Dashboard table
+-- Dashboard table: All of the dashboards that the user has created
 CREATE TABLE IF NOT EXISTS `dashboard` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `title` varchar(50) DEFAULT NULL,
   `description` varchar(255) DEFAULT NULL,
   `userId` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Card table
+-- Card table: All of the cards contained in the dashboards
 CREATE TABLE IF NOT EXISTS `card` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `title` varchar(50) DEFAULT NULL,
@@ -76,14 +76,14 @@ CREATE TABLE IF NOT EXISTS `card` (
   `rank` int NOT NULL,
   FOREIGN KEY (dashboardId) REFERENCES dashboard(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Conversation table
+-- Conversation table: All of the conversations between the user and the AI model
 CREATE TABLE IF NOT EXISTS `conversation` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `title` varchar(50) NOT NULL,
   `userId` int NOT NULL,
   FOREIGN KEY (`userId`) REFERENCES `user`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
--- Message table
+-- Message table: storing all of the messages sent by and to the AI model
 CREATE TABLE IF NOT EXISTS `message` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `conversationId` int NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS `message` (
 
 
 -- PROCEDURES
--- Procedure to delete old logs
+-- Procedure to prune old logs
 DELIMITER $$
 CREATE DEFINER=`ownlogs`@`%` PROCEDURE IF NOT EXISTS `log_rotate`()
 BEGIN

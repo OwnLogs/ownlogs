@@ -7,7 +7,11 @@ export const load = (async ({ params }) => {
   try {
     const conversation = await getConversation(parseInt(idConversation));
     return { conversation };
-  } catch (_err) {
-    throw error(404, 'Conversation not found');
+  } catch (err) {
+    if(err instanceof Error) {
+      throw error(500, err.message);
+    }else {
+      throw error(404, 'Conversation not found');
+    }
   }
 }) satisfies PageServerLoad;

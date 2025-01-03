@@ -47,7 +47,6 @@ const rolePermissions = {
 	[ROLES.GUEST]: [
     PERMISSIONS.READ_SERVER,
     PERMISSIONS.READ_LOG,
-    PERMISSIONS.READ_DASHBOARD,
   ],
 };
 

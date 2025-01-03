@@ -104,7 +104,7 @@ app.listen(port, async () => {
   // Prune cache every MAX_CACHE_TIME
   setInterval(knownServerIdsCache.pruneCache, knownServerIdsCache.MAX_CACHE_TIME);
   // Monitor servers
-  setInterval(monitorServers, config.monitoring.check_interval);
+  setInterval(monitorServers, config.server_monitoring.check_interval);
 
   Logger.info(`[server]: Server is running at http://localhost:${port}`);
 });

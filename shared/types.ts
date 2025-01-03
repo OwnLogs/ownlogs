@@ -63,7 +63,7 @@ export interface BackendConfig {
     },
     sendingFrom?: string;
   },
-  monitoring?: {
+  server_monitoring?: {
     check_interval?: number;
   }
 }
@@ -85,7 +85,7 @@ export interface FinalBackendConfig extends BackendConfig {
     },
     sendingFrom: string;
   },
-  monitoring: {
+  server_monitoring: {
     check_interval: number;
   }
 }
