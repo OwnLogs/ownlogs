@@ -5,5 +5,5 @@ export const load = (async ({ locals, cookies }) => {
   locals.user = undefined;
   cookies.delete('token', { path: '/' });
 
-  throw redirect(303, '/');
+  throw redirect(303, '/log-in');
 }) satisfies PageServerLoad;

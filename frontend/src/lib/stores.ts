@@ -12,7 +12,6 @@ export const pageMetadata: Writable<{
   breadcrumbs: []
 });
 
-
 export type ToastType = 'success' | 'error' | 'info';
 interface ToastOptions {
   action?: {
@@ -34,7 +33,7 @@ export const toasts: Writable<Toast[]> = writable([]);
 const generateId = () => Date.now().toString() + Math.floor(Math.random() * 10000).toString();
 
 function newToast(type: ToastType, message: string, options: ToastOptions): string {
-  if(options.id) {  
+  if (options.id) {
     removeToast(options.id);
   }
   const newToast: Toast = {

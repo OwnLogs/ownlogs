@@ -112,6 +112,16 @@ const config: Config = {
           textWrap: 'balance'
         }
       });
+    }),
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        '.ligatures-normal': {
+          fontVariantLigatures: 'normal'
+        },
+        '.ligatures-none': {
+          fontVariantLigatures: 'none'
+        }
+      });
     })
   ]
 };

@@ -22,4 +22,5 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 pnpm-lock.yaml
-db_data/
+data/
+venv/

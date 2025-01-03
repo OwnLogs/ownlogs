@@ -17,7 +17,6 @@ class DB {
   public async connect(): Promise<void> {
     if (!this.connection) {
       try {
-        
         this.connection = await mysql.createConnection(dbConfig);
         console.log('Connected to MySQL database.');
       } catch (error) {

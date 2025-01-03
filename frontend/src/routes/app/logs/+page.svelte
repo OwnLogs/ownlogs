@@ -61,7 +61,7 @@
     | null = $state(null);
 
   function webSocket(initial = true) {
-    if(!initial) {
+    if (!initial) {
       toast.info('Connecting to the server...', { id: toastId });
     }
     socket = new WebSocket(WEBSOCKET_URL + '/getLogsOverviewStatistics');
@@ -113,25 +113,23 @@
     });
 
     socket.addEventListener('open', () => {
-      if(!initial) toast.info('Connected to the server', { id: toastId });
+      if (!initial) toast.success('Connected to the server', { id: toastId });
     });
 
     socket.addEventListener('close', () => {
       try {
-        if(isLoaded)
-        toast.error('The connection to the server was closed', {
-          id: toastId,
-          timeout: -1,
-          action:{
-            label: 'Reconnect',
-            onClick: () => {
-              webSocket(false);
+        if (isLoaded)
+          toast.error('The connection to the server was closed', {
+            id: toastId,
+            timeout: -1,
+            action: {
+              label: 'Reconnect',
+              onClick: () => {
+                webSocket(false);
+              }
             }
-          }
-        });
-      } catch(e) {
-
-      }
+          });
+      } catch (e) {}
     });
   }
 
@@ -141,13 +139,12 @@
 
     // Close the socket when the component is destroyed
     return () => {
-      if(socket)
-      socket?.close();
+      if (socket) socket?.close();
     };
   });
 
   beforeNavigate(() => {
-    isLoaded = false
+    isLoaded = false;
   });
 
   const formatUptime = (secs: number): string => {

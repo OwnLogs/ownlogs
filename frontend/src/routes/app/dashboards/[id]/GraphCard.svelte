@@ -15,55 +15,56 @@
 
   onMount(() => {
     (async () => {
-    const module = await import('apexcharts');
-    ApexCharts = module.default;
-    Object.assign(window, { ApexCharts });
+      const module = await import('apexcharts');
+      ApexCharts = module.default;
+      Object.assign(window, { ApexCharts });
 
-    // Prepare chart options
-    const series = yKeys.map((key) => ({
-      name: key,
-      data: data.map((entry) => ({
-        x: entry[xKey],
-        y: entry[key]
-      }))
-    }));
+      // Prepare chart options
+      const series = yKeys.map((key) => ({
+        name: key,
+        data: data.map((entry) => ({
+          x: entry[xKey],
+          y: entry[key]
+        }))
+      }));
 
-    const xaxisType: string = typeof data[0]?.[xKey] === 'number' ? 'numeric' : 'datetime';
-    const xaxisLabel: { format:string } | undefined = xaxisType === 'datetime' ? { format: 'yyyy-MM-dd' } : undefined;
+      const xaxisType: string = typeof data[0]?.[xKey] === 'number' ? 'numeric' : 'datetime';
+      const xaxisLabel: { format: string } | undefined =
+        xaxisType === 'datetime' ? { format: 'yyyy-MM-dd' } : undefined;
 
-    const options = {
-      chart: {
-        type,
-        height: '100%',
-        width: '100%',
-      },
-      xaxis: {
-        type: xaxisType,
-        labels: xaxisLabel,
-      },
-      yaxis: {
-        labels: {
-          formatter: (value: unknown) => {
-            if(typeof value !== 'number') return value;
-            return value.toFixed(2)
-          },
+      const options = {
+        chart: {
+          type,
+          height: '100%',
+          width: '100%'
         },
-      },
-      tooltip: {
-        x: xaxisLabel,
-        y: {
-          formatter: (value: unknown) => {
-            if(typeof value !== 'number') return value;
-            return value.toFixed(2)
-          },
+        xaxis: {
+          type: xaxisType,
+          labels: xaxisLabel
         },
-      },
-      series,
-    };
+        yaxis: {
+          labels: {
+            formatter: (value: unknown) => {
+              if (typeof value !== 'number') return value;
+              return value.toFixed(2);
+            }
+          }
+        },
+        tooltip: {
+          x: xaxisLabel,
+          y: {
+            formatter: (value: unknown) => {
+              if (typeof value !== 'number') return value;
+              return value.toFixed(2);
+            }
+          }
+        },
+        series
+      };
 
-    // Initialize the chart
-    chart = new ApexCharts(chartElement, options);
-    chart.render();
+      // Initialize the chart
+      chart = new ApexCharts(chartElement, options);
+      chart.render();
     })();
 
     return () => {
