@@ -44,7 +44,7 @@ export async function ask(messages: BuildingMessage[]) {
     stream: true,
     messages: messagesForModel,
     options: {
-      num_ctx: 4096,
+      num_ctx: 4096
     }
   });
   return completion;

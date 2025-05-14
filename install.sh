@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage:
-# curl -sSL https://raw.githubusercontent.com/ownlogs/ownlogs/main/install.sh | bash
+# curl -s https://raw.githubusercontent.com/ownlogs/ownlogs/main/install.sh | bash
 
 # Check if docker is installed
 if ! command -v docker &> /dev/null; then

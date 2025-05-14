@@ -271,18 +271,10 @@ The python in a work in progress in is not fully implemented.
 
 
 # Installing
-Currently, there is no easy way of installing OwnLogs except cloning the repository and running a bunch of commands. But we are currently working on an interactive install script.
-But for now, here is how to install it :
+To install the default way, you can run the following code snippet. It will execute the install script (pull docker images and run them)
 ```bash
-git clone https://github.com/OwnLogs/ownlogs
-cd ownlogs
+bash <(curl -s https://github.com/OwnLogs/ownlogs/blob/main/install.sh)
 ```
-You should now configure your instance of OwnLogs.
-```bash
-./docker/run.sh
-```
-This will set environment default variables if you did't changed them, pull the containers from the Docker registry and run the project.
-
 
 
 Question: {question}
