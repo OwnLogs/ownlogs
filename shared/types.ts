@@ -63,8 +63,11 @@ export interface BackendConfig {
     },
     sendingFrom?: string;
   },
-  monitoring?: {
+  server_monitoring?: {
     check_interval?: number;
+  },
+  metrics?: {
+    retentionPeriod?: number; // Retention period in days
   }
 }
 export interface FinalBackendConfig extends BackendConfig {
@@ -85,7 +88,10 @@ export interface FinalBackendConfig extends BackendConfig {
     },
     sendingFrom: string;
   },
-  monitoring: {
+  server_monitoring: {
     check_interval: number;
+  },
+  metrics: {
+    retentionPeriod: number; // Retention period in days
   }
 }

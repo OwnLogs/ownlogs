@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { type BuildingMessage, type Message } from '$lib/ai';
+import { type BuildingMessage, type Message } from '$lib/types';
 import { createMessage } from '$lib/server/db/ai';
 import { json } from '@sveltejs/kit';
 

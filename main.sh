@@ -41,6 +41,11 @@ case $choice in
       pnpm dev 2>&1 | prefix_output "\033[1;32m" "[BACKEND]"
     ) &
 
+    # Start the ai container
+    (
+      ./docker/test/runAI.sh | prefix_output "\e[0;33m" "[AI]"
+    ) &
+
     # Wait for both servers to exit
     wait
     ;;

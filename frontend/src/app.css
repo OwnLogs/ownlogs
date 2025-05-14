@@ -181,7 +181,7 @@ code:not(pre > code) {
 .message h5 {
   @apply mb-2 mt-0 font-bold text-lg;
 }
-.message p {
+.message p:not(:last-child){
   @apply m-0 mb-4
 }
 /* Table */

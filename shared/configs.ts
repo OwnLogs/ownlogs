@@ -46,15 +46,18 @@ const defaultBackendConfig: FinalBackendConfig = {
   SMTP: {
     host: '', // Service name matches the Docker container name
     port: 587,
-    secure: false, // Postfix doesn't use SSL/TLS
+    secure: false,
     auth: {
       user: '',
       pass: ''
     },
     sendingFrom: 'alerts@ownlogs.com'
   },
-  monitoring: {
+  server_monitoring: {
     check_interval: 1000 * 60 * 5, // 5 minutes
+  },
+  metrics: {
+    retentionPeriod: 7, // Retention period in days
   }
 };
 
